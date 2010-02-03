@@ -1,0 +1,154 @@
+#!/bin/sh
+fail() {
+	/bin/echo "Failed"
+	/bin/echo "$1"
+	exec /bin/sh
+}
+
+if [ -d /sdcard/android ] ; then
+	card=/sdcard/android
+else
+	card=/sdcard
+fi
+
+if [ -d /sys/block/mmcblk0/mmcblk0p3 ] ; then
+	DATAPART=1
+else
+	DATAPART=0
+fi
+
+#install the system supplied by $1 of type $2
+system() {
+	losetup /dev/block/loop1 $card/$1
+	[ $? -eq 0 ] || fail "Failed to find $1 on SD Card"
+	mount -t $2 -o ro,noatime,nodiratime /dev/block/loop1 $card/temp
+	[ $? -eq 0 ] || fail "Failed to mount $1"
+	mke2fs -F /dev/block/mmcblk0p2
+	mount -t ext2 /dev/block/mmcblk0p2 /system
+	cp -a $card/temp/* /system/
+	umount $card/temp
+	umount /system
+	mkdir -p $card/backupsystem
+	mv $card/$1 $card/backupsystem/installed$1
+	[ $? -eq 0 ] || fail "Failed to copy"
+	if [ -f $card/data.img -a $DATAPART -eq 1 ] ; then
+		userdata
+	else
+		echo "System upgrade complete"
+		if [ $DATAPART -eq 1 ] ; then
+			read -s -n1 -t1 keypress
+			read -s -n1 -t1 keypress
+			read -s -n1 -t1 keypress
+			read -s -n3 -p "VolDn to wipe data, END to continue" keypress
+			if [ "$keypress" = "[2" ] ; then
+				echo ""
+				echo "Clearing your data parition"
+				mke2fs -F /dev/block/mmcblk0p3
+			else
+				echo ""
+			fi
+		fi
+	fi
+}
+
+userdata() {
+	echo "Writing data.img onto data partition"
+	mke2fs -F /dev/block/mmcblk0p3
+	losetup /dev/block/loop0 $card/data.img
+	mount -t ext2 /dev/block/loop0 $card/temp
+	mount -t ext2 /dev/block/mmcblk0p3 /data
+	cp -a $card/temp/* /data/
+	umount $card/temp
+	umount /data
+	mkdir -p $card/backupsystem
+	mv $card/data.img $card/backupsystem/data.img
+}
+
+PATH=/sbin:/system/sbin:/system/bin:/bin:/system/xbin:/system/xbin/bb:/data/local/bin
+
+/bin/echo ""
+/bin/echo "Welcome to Android Installer"
+mkdir $card/temp
+
+# update your system from system.sqsh on sdcard
+if [ -f $card/system.sqsh ] ; then
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n3 -p "Press Voldn to upgrade, END to continue." keypress
+	if [ "$keypress" = "[2" ] ; then
+		echo ""
+		echo "Using SquashFS system"
+		system system.sqsh squashfs
+	fi
+elif [ -f $card/system.ext2 ] ; then
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n3 -p "Press Voldn to upgrade, END to continue." keypress
+	if [ "$keypress" = "[2" ] ; then
+		echo ""
+		echo "Using ext2FS system"
+		system system.ext2 ext2
+	fi
+elif [ -f $card/system.img ] ; then
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n3 -p "Press Voldn to upgrade, END to continue." keypress
+	if [ "$keypress" = "[2" ] ; then
+		echo ""
+		echo "Using CramFS system"
+		system system.img cramfs
+	fi
+fi
+if [ $DATAPART -eq 1 ] ; then
+	if [ -f $card/data.img ] ; then
+		read -s -n1 -t1 keypress
+		read -s -n1 -t1 keypress
+		read -s -n1 -t1 keypress
+		read -s -n3 -p "Press Voldn to use data.img, END to continue." keypress
+		if [ "$keypress" = "[2" ] ; then
+			echo ""
+			userdata
+		fi
+		echo ""
+	fi
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n3 -p "Press Voldn to backup data, END to continue." keypress
+	if [ "$keypress" = "[2" ] ; then
+		echo ""
+		echo "Backing up your data partition"
+		mount -t ext2 /dev/block/mmcblk0p3 /data
+		mkdir -p $card/backupsystem
+		if [ -f $card/backupsystem/databackup.img ] ; then
+			rm $card/backupsystem/databackup.img
+		fi
+		dd if=/dev/zero of=$card/backupsystem/databackup.img bs=1048576 count=256
+		mke2fs -F $card/backupsystem/databackup.img
+		losetup /dev/block/loop0 $card/backupsystem/databackup.img
+		mount -t ext2 /dev/block/loop0 $card/temp
+		cp -a /data/* $card/temp
+		umount /data
+		umount $card/temp
+	fi
+	echo ""
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n1 -t1 keypress
+	read -s -n3 -p "Press Voldn to wipe data, END to continue." keypress
+	if [ "$keypress" = "[2" ] ; then
+		echo ""
+		echo "Clearing your data partition"
+		mke2fs -F /dev/block/mmcblk0p3
+	fi
+fi
+echo ""
+echo "Thanks for using the Android utilities"
+rmdir $card/temp
+read -s -n1 -t1 keypress
+read -s -n1 -t1 keypress
+read -s -n1 -t1 keypress
+read -s -n1 -p "Press any key to boot"

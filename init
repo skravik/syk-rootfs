@@ -1,0 +1,433 @@
+#!/bin/sh
+fail() {
+	/bin/echo "Failed"
+		/bin/echo "$1"
+		exec /bin/sh
+}
+
+/bin/mount -o remount,rw / /
+
+PATH=/sbin:/system/sbin:/system/bin:/bin:/system/xbin:/system/xbin/bb:/data/local/bin
+
+/bin/echo "Rootfs loaded."
+
+/bin/mount -t proc proc /proc
+/bin/mount -t sysfs sys /sys
+
+/bin/mount | grep mtd
+notnand=$?
+
+if [ $notnand = "0" ] ; then
+  echo "running from NAND"
+  /bin/mount -t yaffs2 /dev/block/mtdblock2 /system
+  /bin/mount -t yaffs2 /dev/block/mtdblock3 /data
+fi
+
+
+partition=mmcblk0p1
+
+# Try unpartitioned card
+if [ ! -d /sys/block/mmcblk0/$partition ] ; then
+	partition=mmcblk0
+fi
+
+if [ -f /sys/class/vogue_hw/gsmphone ] ; then
+	echo "GSM phone found"
+fi
+
+#mkdir -m 0777 /sdcard
+#fsck already done in initrd
+mount -t vfat -o fmask=0000,dmask=0000,rw,flush,noatime,nodiratime /dev/block/$partition /sdcard
+[ $? -eq 0 ] || fail "Failed to mount the SD card. Cannot continue."
+
+if [ ! -d /sdcard/cache ] ; then
+	mkdir /sdcard/cache
+fi
+
+#mkdir -m 0777 /cache
+mount /sdcard/cache /cache
+
+if [ -d /sdcard/android ] ; then
+	card=/sdcard/android
+else
+	card=/sdcard
+fi
+
+
+if [ $notnand = "1" ] ; then
+    
+    if [ -f $card/data.gz ] ; then
+            echo "Please wait... extracting Data Image"
+            if [ -f $card/data.img ] ; then
+                    rm $card/data.img
+            fi
+            gzip -df $card/data.gz
+            [ $? -eq 0 ] || fail "Failed to extract Data Image"
+            mv $card/data $card/data.img
+            echo "done"
+    fi
+    
+    PARTITIONED=0
+    echo "Checking for partition..."
+    if [ -d /sys/block/mmcblk0/mmcblk0p2 ] ; then
+            PARTITIONED=1
+            if [ -d /sys/block/mmcblk0/mmcblk0p3 ] ; then
+                    PARTITIONED=2
+            fi
+    fi
+    
+    if [ -f $card/backupsystem/installedsystem.sqsh -o -f $card/backupsystem/installedsystem.img -o -f $card/backupsystem.ext2 ]; then
+            echo "Partitioned Build Detected"
+    else
+            PARTITIONED=0
+    fi
+    
+    if [ $PARTITIONED -lt 2 ] ; then
+	     
+            if [ ! -f $card/data.img ] ; then
+                    echo "Creating a new Data store"
+                    dd if=/dev/zero of=$card/data.img bs=1048576 count=256
+                    [ $? -eq 0 ] || fail "Failed to allocate the storage"
+                    mke2fs -F $card/data.img
+                    [ $? -eq 0 ] || fail "Failed to format the storage"
+            fi
+    fi
+    
+    if [ $PARTITIONED -lt 2 ] ; then
+            losetup /dev/block/loop0 $card/data.img
+            [ $? -eq 0 ] || fail "Failed to find data.img on SD Card"
+            e2fsck -y /dev/block/loop0
+            mount -t ext2 -o noatime,nodiratime,sync /dev/block/loop0 /data
+    else
+            e2fsck -y /dev/block/mmcblk0p3
+            mount -t ext2 -o noatime,nodiratime /dev/block/mmcblk0p3 /data
+    fi
+    [ $? -eq 0 ] || fail "Failed to mount /data"
+    
+    if [ $PARTITIONED -eq 0 ] ; then
+            if      [ -f $card/system.ext2 ] ; then
+                    echo "Using uncompressed system"
+                    losetup /dev/block/loop1 $card/system.ext2
+                    [ $? -eq 0 ] || fail "Failed to reach system.ext2 on SD Card"
+                    e2fsck -y /dev/block/loop1
+                    mount -t ext2 -o noatime,nodiratime /dev/block/loop1 /system
+		    [ $? -eq 0 ] || fail "Failed to mount /system"
+            elif    
+		    [ -f $card/system.sqsh ] ; then
+                    echo "Using SquashFS system"
+                    losetup /dev/block/loop1 $card/system.sqsh
+                    [ $? -eq 0 ] || fail "Failed to find system.sqsh on SD Card"
+                    mount -t squashfs -o ro,noatime,nodiratime /dev/block/loop1 /system
+                    [ $? -eq 0 ] || fail "Failed to mount /system"
+            else
+                    losetup /dev/block/loop1 $card/system.img
+                    [ $? -eq 0 ] || fail "Failed to find system.img on SD Card"
+                    mount -t cramfs -o ro,noatime,nodiratime /dev/block/loop1 /system
+                    [ $? -eq 0 ] || fail "Failed to mount /system"
+            fi
+    else
+            echo "Using partitioned system"
+            e2fsck -y /dev/block/mmcblk0p2
+            mount -t ext2 -o ro,noatime,nodiratime /dev/block/mmcblk0p2 /system
+            [ $? -eq 0 ] || fail "Failed to mount /system"
+    fi
+fi
+
+if [ -d /sdcard/AndroidApps ] ; then
+        echo Copying Applications
+        if [ ! -d /data/app ] ; then
+                mkdir -m 0771 /data/app
+        fi
+        /bin/cp /sdcard/AndroidApps/* /data/app
+        chown -R 1000:1000 /data/app
+fi
+
+if [ ! -d /sdcard/android/media ] ; then
+        echo You have no media folder, please extract the resources to your SD card android folder
+fi
+
+SQLITE3="/bin/sqlite3"
+DB="/data/data/com.android.providers.telephony/databases/telephony.db"
+if [ -f $DB ] ; then
+	if [ "`$SQLITE3 $DB 'SELECT numeric FROM carriers;' | grep 310995`" != "310995" ] ; then
+		echo Creating android apn
+		"$SQLITE3" "$DB" "INSERT INTO carriers VALUES(NULL, 'Android' , '310995' , '310' , '995' , 'internet' , '*' , '*' , '*' , NULL, NULL, NULL, NULL, 'null' , 'default' , 1);"
+	fi
+else
+	echo No telephony database. You must have a new data file. I will check for the android apn on the next reboot
+fi
+
+/bin/rm -rf /data/etc
+/bin/mkdir -m 0755 /data/etc
+mount /data/etc /etc
+cp -a /system/etc/* /etc
+cp -ar /init.etc/* /etc/
+
+LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
+
+if [ "$LCDDENSITY" != "" ] ; then
+	echo "ro.sf.lcd_density=$LCDDENSITY" >> /etc/default.prop
+	echo Setting ro.sf.lcd_density=$LCDDENSITY
+fi
+
+if [ ! -d /data/shared_prefs ] ; then
+	mkdir -m 0770 /data/shared_prefs
+fi
+chmod 0770 /data/shared_prefs
+chown 1000:1000 /data/shared_prefs
+mount /data/shared_prefs /shared_prefs
+
+mount /sdcard/cache /tmp
+
+cp /system/build.prop /tmp/build.prop
+KAISER=0
+DIAMOND=0
+### Is this a Kaiser?
+if [ "`cat /proc/cpuinfo|grep -o Kaiser`" = "Kaiser" ]; then
+	echo "KAISER detected"
+	KAISER=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+elif [ "`cat /proc/cpuinfo|grep -o Polaris`" = "Polaris" ]; then
+	echo "POLARIS detected"
+	KAISER=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+elif [ "`cat /proc/cpuinfo|grep -o Diamond`" = "Diamond" ]; then
+	echo "DIAMOND detected"
+	DIAMOND=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+elif [ "`cat /proc/cpuinfo|grep -o Raphael`" = "Raphael" ]; then
+	echo "RAPHAEL detected"
+	DIAMOND=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+elif [ "`cat /proc/cpuinfo|grep -o blackstone`" = "blackstone" ]; then
+	echo "BLACKSTONE detected"
+	DIAMOND=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+elif [ "`cat /proc/cpuinfo|grep -o Topaz`" = "Topaz" ]; then
+	echo "TOPAZ detected"
+	DIAMOND=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+elif [ "`cat /proc/cpuinfo|grep -o Rhodium`" = "Rhodium" ]; then
+	echo "RHODIUM detected"
+	DIAMOND=1
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+else
+	echo "VOGUE detected"
+	sed -i s/^wifi/#wifi/ /tmp/build.prop
+fi
+
+mount --bind /tmp/build.prop /system/build.prop
+
+### Fix su on some builds...
+mount --bind /bin/su /system/bin/su
+mount --bind /bin/su /system/xbin/su
+
+RCSCRIPT=""
+RCCONFIG=""
+
+echo "Checking for build type..."
+if [ -f /system/hero.build ] ; then
+	echo "Hero build detected"
+	RCSCRIPT="hero"
+	RCCONFIG="hero"
+	ln /data/app_s /system/app
+
+elif [ -f /system/eclairhero.build ] ; then
+	echo "HERO 2.1 BUILD DETECTED -- ECLAIR"
+	RCSCRIPT="eclairhero"
+	RCCONFIG="eclairhero"
+
+elif [ -f /system/eclair.build ] ; then
+	echo "Eclair build detected"
+	RCSCRIPT="eclair"
+	RCCONFIG="eclair"
+
+elif [ -f /system/tattoo.build ] ; then
+	echo "Tattoo build detected"
+	RCSCRIPT="tattoo"
+	RCCONFIG="tattoo"
+
+elif [ -f /system/donut.build ] ; then
+	echo "Donut build detected"
+	RCSCRIPT="donut"
+	RCCONFIG="donut"
+
+elif [ -d /system/lib/donut ] ; then
+	echo "Donut build detected"
+	RCSCRIPT="donut"
+	RCCONFIG="donut"
+
+elif [ -f /system/xrom.build ] ; then
+	echo "xROM build detected"
+	RCSCRIPT="xrom"
+	RCCONFIG="xrom"
+
+elif [ -f /system/rogers.build ] ; then
+	echo "Rogers build detected"
+	RCSCRIPT="rogers"
+	RCCONFIG="rogers"
+
+elif [ -f /system/cyanogen.build ] ; then
+	echo "cyanogen experimental detected.....eating donuts"
+	RCSCRIPT="cyanogen"
+	RCCONFIG="cyanogen"
+
+elif [ -f /system/custom.build ] ; then
+	echo "Custom init.rc detected"
+	cp /system/sysinit.rc /build.cfg/init.sysinit.rc
+	RCCONFIG="hero"
+	RCSCRIPT="sysinit"
+	
+else
+	echo "Unknown Android build. Assuming Ion variant"
+	RCSCRIPT="ion"
+	RCCONFIG="ion"
+
+	# for the fake sensors library
+	mount /lib/hw /system/lib/hw -o loop
+	chmod 666 /dev/input/event0
+
+	if [ $DIAMOND -eq 1 ] ; then
+		RCCONFIG="ion.diamond"
+	fi
+fi
+
+if [ $KAISER -eq 1 ] ; then
+	RCSCRIPT="$RCSCRIPT.kaiser"
+fi
+
+echo "using /init.$RCSCRIPT.rc as init.rc"
+echo "using $card/conf/$RCCONFIG.user.conf"
+
+cp "/init.cfg/init.$RCSCRIPT.rc" /etc/init.rc
+
+#Assume this rootfs.img will be used only on "good" devices
+#Meaning raph/diam/blac/
+
+# echo /dev/block/mmcblk0p2 > /sys/devices/platform/usb_mass_storage/lun0/file
+ifconfig usb0 192.168.20.1 up
+busybox telnetd -b 192.168.20.1 -l /bin/sh
+#chmod 4755 /bin/su
+#mkdir -m 0777 /smodem
+
+DIAMOND=1
+if [ "$DIAMOND" = "1" ];then
+	if [ -e "/sdcard/modules-$(uname -r).tar.gz" ] ;then
+		mkdir /data/modules
+		mount --bind /data/modules /lib/modules
+		tar xzf /sdcard/modules-$(uname -r).tar.gz -C /lib/modules
+		cd /lib/modules
+		for i in xvmalloc ramzswap;do
+			insmod ${i}.ko
+		done
+		cp wlan.ko /etc/wifi
+	fi
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = wlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+	mount --bind /etc/wifi /system/lib/modules
+fi
+
+
+if [ -f "$card/conf/$RCCONFIG.user.conf" ]; then
+	/bin/userinit.sh -c "$card/conf/$RCCONFIG.user.conf"
+else
+	echo "No user config files ($RCCONFIG) found on sdcard"
+fi
+
+mount -tdebugfs none /dbgfs
+#Activate baclight control
+echo 3 > /sys/class/htc_hw/test
+#Activate full charging
+echo 2 > /dbgfs/htc_battery/charger_state
+#Activate wifi
+echo 1 > /dbgfs/htcraphaelmmc_dbg/wifi_pwr
+echo 1 > /dbgfs/htcraphaelmmc_dbg/wifi_cd
+echo 1024 > /dbgfs/micropklt_dbg/sleep_leds
+
+if /bin/grep -c 'physkeyboard=fuze' /proc/cmdline >/dev/null ; then
+	echo "USING RAPH110|FUZE LAYOUT"
+	cp -f /init.etc/keymaps/fuze_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/fuze_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/fuze_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+elif /bin/grep -c 'physkeyboard=raph' /proc/cmdline >/dev/null ; then
+	echo "USING NEW RAPH LAYOUT"
+        cp -f /init.etc/keymaps/raphfix_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+elif /bin/grep -c 'physkeyboard=tilt2' /proc/cmdline >/dev/null ; then
+	echo "USING EXPERIMENTAL TILT2 LAYOUT"
+        cp -f /init.etc/keymaps/tilt2_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/tilt2_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/tilt2_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+else
+        echo "USING OLD KEYMAP"
+        cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/oldqwerty_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+fi
+
+for i in /sys/class/input/input* ; do
+        if [ "`cat $i/name`" = "tssc-manager" ] ; then
+                touchscreendir=$i
+                echo "Touchscreen device directory is $i"
+        fi
+done
+
+if [ -f $card/ts-calibration ] ; then
+        echo "Using Saved Touchscreen Calibration"
+	echo 128,128,1903,128,128,1907,1903,1907,1024,1024 > $touchscreendir/calibration_screen
+        cat $card/ts-calibration > /sys/class/input/input3/calibration_points
+else
+        mkdir /dev/graphics
+        mknod /dev/graphics/fb0 c 29 0
+        clear
+        echo; echo; echo; echo; echo; echo; echo; echo "Calibrating Touchscreen:"
+        echo "Click the Five Targets in order -- Top Left, Top Right, Middle, Bottom Left, Bottom Right"
+	echo "(Tap lightly. The screen is quite sensitive.)"
+        tssc-calibrate
+        echo 0,0,0,0,0,0,0,0,0,0 | cmp -s $touchscreendir/calibration_points # determine if calibration is still null -- means failed calibration
+        if [ $? -eq 0 ] ; then
+                echo "Touchscreen Calibration Failed"
+        else
+                echo "Touchscreen Calibration Successful; Saving..."
+                cat $touchscreendir/calibration_points > $card/ts-calibration
+        fi
+fi
+
+exec /init.android
