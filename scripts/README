@@ -1,0 +1,26 @@
+Android eclair rootfs scripts
+--------------------------------------
+
+These scripts are meant to be used by packagers who are creating a new rootfs
+image from a local checkout of the git repo.
+
+gitclean.sh
+===========
+This script will clean out all git-related files from the rootfs. This is not
+inherently necessary, but is needed to keep the rootfs small. Run this file
+from the root directory of the image.
+
+ * Invocation: $ scripts/gitclean.sh
+
+distprepare.py
+==============
+This is a python script written with py2.6 in mind. This script will read a
+map of file and directory permissions from scripts/perms.map. This map will
+have been created from previous releases of the rootfs image. The script will
+adjust all permissions to exactly those listed in the file (it will need root
+access for this).
+
+The script must be run from the root directory of the image. The perms.map file
+must reside in the scripts directory.
+
+ * Invocation: $ sudo scripts/distprepare.py
