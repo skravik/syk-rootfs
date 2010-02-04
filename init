@@ -375,6 +375,8 @@ fi
 mount -tdebugfs none /dbgfs
 #Activate baclight control
 echo 3 > /sys/class/htc_hw/test
+#Smooth scroll
+echo 40 >/sys/devices/system/cpu/cpu0/cpufreq/ondemand/up_threshold
 #Activate full charging
 echo 2 > /dbgfs/htc_battery/charger_state
 #Activate wifi
@@ -395,6 +397,11 @@ elif /bin/grep -c 'physkeyboard=tilt2' /proc/cmdline >/dev/null ; then
         cp -f /init.etc/keymaps/tilt2_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/tilt2_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/tilt2_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+elif /bin/grep -c 'physkeyboard=rhod210' /proc/cmdline >/dev/null ; then
+	echo "USING EXPERIMENTAL RHOD210 LAYOUT"
+        cp -f /init.etc/keymaps/rhod210_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod210_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod210_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
 else
         echo "USING OLD KEYMAP"
         cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
@@ -412,7 +419,7 @@ done
 if [ -f $card/ts-calibration ] ; then
         echo "Using Saved Touchscreen Calibration"
 	echo 128,128,1903,128,128,1907,1903,1907,1024,1024 > $touchscreendir/calibration_screen
-        cat $card/ts-calibration > /sys/class/input/input3/calibration_points
+        cat $card/ts-calibration > $touchscreendir/calibration_points
 else
         mkdir /dev/graphics
         mknod /dev/graphics/fb0 c 29 0
