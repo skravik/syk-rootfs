@@ -352,9 +352,6 @@ if [ "$DIAMOND" = "1" ];then
 		mount --bind /data/modules /lib/modules
 		tar xzf /sdcard/modules-$(uname -r).tar.gz -C /lib/modules
 		cd /lib/modules
-		for i in xvmalloc ramzswap;do
-			insmod ${i}.ko
-		done
 		cp wlan.ko /etc/wifi
 	fi
 	sed -i s/^#wifi/wifi/ /tmp/build.prop
