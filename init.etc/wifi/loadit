@@ -3,7 +3,15 @@ if [ ! -e /data/wifi-calibration ]; then
 	insmod /lib/modules/mtdchar.ko
 	mknod /dev/mtd/mtd0ro c 90 1
 	mkdir /lib/modules/$(uname -r)
-	dd if=/dev/mtd/mtd0ro of=/tmp/tempcal bs=8192 count=1 skip=4736
+
+	# Different offset needed for CDMA (DIAM500/RAPH800)
+	if [ "`cat /proc/cpuinfo|grep -o CDMA`" = "CDMA" ]; then
+		SKIP=4048
+	else
+		SKIP=4736
+	fi
+
+	dd if=/dev/mtd/mtd0ro of=/tmp/tempcal bs=8192 count=1 skip=$SKIP
 	rm /dev/mtd/mtd0ro
 	rmmod mtdchar
 	rmdir /lib/modules/$(uname -r)
