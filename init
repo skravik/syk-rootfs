@@ -133,16 +133,16 @@ if [ $notnand = "1" ] ; then
     fi
 fi
 
-if [ -d /sdcard/AndroidApps ] ; then
+if [ -d $card/AndroidApps ] ; then
         echo Copying Applications
         if [ ! -d /data/app ] ; then
                 mkdir -m 0771 /data/app
         fi
-        /bin/cp /sdcard/AndroidApps/* /data/app
+        /bin/cp $card/AndroidApps/* /data/app
         chown -R 1000:1000 /data/app
 fi
 
-if [ ! -d /sdcard/android/media ] ; then
+if [ ! -d $card/media ] ; then
         echo You have no media folder, please extract the resources to your SD card android folder
 fi
 
@@ -353,10 +353,10 @@ fi
 
 DIAMOND=1
 if [ "$DIAMOND" = "1" ];then
-	if [ -e "/sdcard/modules-$(uname -r).tar.gz" ] ;then
+	if [ -e "$card/modules-$(uname -r).tar.gz" ] ;then
 		mkdir /data/modules
 		mount --bind /data/modules /lib/modules
-		tar xzf /sdcard/modules-$(uname -r).tar.gz -C /lib/modules
+		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
 		cd /lib/modules
 		cp wlan.ko /etc/wifi
 	fi
