@@ -344,6 +344,12 @@ ifconfig usb0 192.168.20.1 up
 busybox telnetd -b 192.168.20.1 -l /bin/sh
 #chmod 4755 /bin/su
 #mkdir -m 0777 /smodem
+if [ -d /data/dropbear/ ] ; then
+	echo "Starting SSH"
+	mknod /dev/random c 1 8
+	mknod /dev/urandom c 1 9
+	/bin/dropbear -r /data/dropbear/dropbear_rsa_host_key -s
+fi
 
 DIAMOND=1
 if [ "$DIAMOND" = "1" ];then
