@@ -16,7 +16,7 @@ REPO="git://gitorious.org/xdandroid-eclair/eclair-rootfs.git"
 [ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}"
 cd ${TMPDIR}
 
-dd if=/dev/zero of=rootfs.img bs=1k count=12887
+dd if=/dev/zero of=rootfs.img bs=1k count=15k
 /sbin/mke2fs -i 1024 -b 1024 -m 5 -F -v rootfs.img
 mkdir rootfs
 sudo mount -o loop rootfs.img rootfs
