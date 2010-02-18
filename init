@@ -151,7 +151,8 @@ DB="/data/data/com.android.providers.telephony/databases/telephony.db"
 if [ -f $DB ] ; then
 	if [ "`$SQLITE3 $DB 'SELECT numeric FROM carriers;' | grep 310995`" != "310995" ] ; then
 		echo Creating android apn
-		"$SQLITE3" "$DB" "INSERT INTO carriers VALUES(NULL, 'Android' , '310995' , '310' , '995' , 'internet' , '*' , '*' , '*' , NULL, NULL, NULL, NULL, 'null' , 'default' , 1);"
+		"$SQLITE3" "$DB" "INSERT INTO carriers VALUES(NULL, 'Android' , '310995' , '310' , '995' , 'internet' , '*' , '*' , '*' , NULL, NULL, NULL, NULL, 'null' , -1, 'default' , 1);"
+
 	fi
 else
 	echo No telephony database. You must have a new data file. I will check for the android apn on the next reboot
