@@ -441,4 +441,9 @@ else
         fi
 fi
 
+mkdir /dev/msm_camera
+mknod /dev/msm_camera/control0 c 250 0
+mknod /dev/msm_camera/config0 c 250 1
+mknod /dev/msm_camera/frame0 c 250 2
+
 exec /init.android
