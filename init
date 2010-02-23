@@ -255,8 +255,8 @@ fi
 mount --bind /tmp/build.prop /system/build.prop
 
 ### Fix su on some builds...
-mount --bind /bin/su /system/bin/su
-mount --bind /bin/su /system/xbin/su
+mount --bind /bin/su /system/bin/su 2> /dev/null
+mount --bind /bin/su /system/xbin/su 2> /dev/null
 
 RCSCRIPT=""
 RCCONFIG=""
