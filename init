@@ -355,7 +355,10 @@ fi
 DIAMOND=1
 if [ "$DIAMOND" = "1" ];then
 	if [ -e "$card/modules-$(uname -r).tar.gz" ] ;then
-		mkdir /data/modules
+		echo "Installing $card/modules-$(uname -r).tar.gz"
+		if [ ! -d "/data/modules" ] ; then
+			mkdir /data/modules
+		fi
 		mount --bind /data/modules /lib/modules
 		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
 		cd /lib/modules
