@@ -339,6 +339,12 @@ service bluetoothd /system/bin/bluetoothd -n
     group bluetooth net_bt_admin misc
     disabled
 
+service hciattach /system/bin/hciattach /dev/ttyHS1 texas 115200
+    user bluetooth
+    group bluetooth net_bt_admin misc
+    disabled
+    oneshot
+
 service hfag /system/bin/sdptool add --channel=10 HFAG
     user bluetooth
     group bluetooth net_bt_admin
