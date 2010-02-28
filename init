@@ -49,7 +49,7 @@ mount /sdcard/cache /cache
 
 CARD_PATH=`/bin/grep -o "rel_path=.*" /proc/cmdline | /bin/sed -e "s/.*rel_path=//g" -e "s/ .*//g"`
 if [ "$CARD_PATH" = "" ];then
-	CARD_PATH="android-dist"
+	CARD_PATH="andboot"
 fi;
 if [ -d /sdcard/$CARD_PATH ] ; then
 	card=/sdcard/$CARD_PATH
