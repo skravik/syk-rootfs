@@ -183,70 +183,37 @@ mount /sdcard/cache /tmp
 cp /system/build.prop /tmp/build.prop
 KAISER=0
 DIAMOND=0
+WIFI_TI=0
+WIFI_BCM=0
 ### Is this a Kaiser?
 if [ "`cat /proc/cpuinfo|grep -o Kaiser`" = "Kaiser" ]; then
 	echo "KAISER detected"
 	KAISER=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_TI=1
 elif [ "`cat /proc/cpuinfo|grep -o Polaris`" = "Polaris" ]; then
 	echo "POLARIS detected"
 	KAISER=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_TI=1
 elif [ "`cat /proc/cpuinfo|grep -o Diamond`" = "Diamond" ]; then
 	echo "DIAMOND detected"
 	DIAMOND=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_TI=1
 elif [ "`cat /proc/cpuinfo|grep -o Raphael`" = "Raphael" ]; then
 	echo "RAPHAEL detected"
 	DIAMOND=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_TI=1
 elif [ "`cat /proc/cpuinfo|grep -o blackstone`" = "blackstone" ]; then
 	echo "BLACKSTONE detected"
 	DIAMOND=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_TI=1
 elif [ "`cat /proc/cpuinfo|grep -o Topaz`" = "Topaz" ]; then
 	echo "TOPAZ detected"
 	DIAMOND=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_TI=1
 elif [ "`cat /proc/cpuinfo|grep -o Rhodium`" = "Rhodium" ]; then
 	echo "RHODIUM detected"
 	DIAMOND=1
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+	WIFI_BCM=1
 else
 	echo "VOGUE detected"
 	sed -i s/^wifi/#wifi/ /tmp/build.prop
@@ -352,8 +319,7 @@ if [ -d /data/dropbear/ ] ; then
 	/bin/dropbear -r /data/dropbear/dropbear_rsa_host_key -s
 fi
 
-DIAMOND=1
-if [ "$DIAMOND" = "1" ];then
+if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 	if [ -e "$card/modules-$(uname -r).tar.gz" ] ;then
 		echo "Installing $card/modules-$(uname -r).tar.gz"
 		if [ ! -d "/data/modules" ] ; then
@@ -363,13 +329,58 @@ if [ "$DIAMOND" = "1" ];then
 		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
 		cd /lib/modules
 		cp wlan.ko /etc/wifi
-	fi
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = wlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+		cp bcm4329.ko /etc/wifi
 	fi
 	mount --bind /etc/wifi /system/lib/modules
+
+	sed -i s/^#wifi/wifi/ /tmp/build.prop
+fi
+
+if [ "$WIFI_TI" = "1" ];then
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+fi
+
+if [ "$WIFI_BCM" = "1" ];then
+	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
+		echo "wifi.interface = eth0" >> /tmp/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	fi
+
+	# fyi: firmware is loaded from /etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
+
+	mount --bind /etc/wifi/bcm432x/dhcpcd.conf /system/etc/dhcpcd/dhcpcd.conf
+	mount --bind /etc/wifi/bcm432x/wpa_supplicant.conf /system/etc/wifi/wpa_supplicant.conf
+	mount --bind /etc/wifi/bcm432x/bcm4325-libhardware_legacy.so /system/lib/libhardware_legacy.so
+
+	# init.rc: fix wpa_supplicant service
+	sed -i s/-itiwlan0/-ieth0/ /etc/init.rc
+	sed -i s/-Dtiwlan0/-Dwext/ /etc/init.rc
+
+	# init.rc: fix dhcpcd service, wifi.interface, and wpa_supplicant service socket
+	sed -i s/tiwlan0/eth0/ /etc/init.rc
+
+	# init.rc:
+	sed -i s/user\ wifi/#user\ wifi/ /etc/init.rc
+	sed -i s/group\ wifi/#group\ wifi/ /etc/init.rc
+
+	# extract nvram (todo: clean this up/integrate with TI calibration)
+	if [ ! -e /data/wifi-nvram.txt ]; then
+		insmod /lib/modules/mtdchar.ko
+		mknod /dev/mtd0ro c 90 1
+		mkdir /lib/modules/$(uname -r)
+
+		SKIP=5744
+
+		dd if=/dev/mtd0ro of=/tmp/tempcal bs=8192 count=1 skip=$SKIP
+		rm /dev/mtd0ro
+		rmmod mtdchar
+		rmdir /lib/modules/$(uname -r)
+		dd if=/tmp/tempcal of=/data/wifi-nvram.txt bs=1 count=466
+		rm /tmp/tempcal
+	fi
 fi
 
 
@@ -386,9 +397,7 @@ echo 3 > /sys/class/htc_hw/test
 echo 40 >/sys/devices/system/cpu/cpu0/cpufreq/ondemand/up_threshold
 #Activate full charging
 echo 2 > /dbgfs/htc_battery/charger_state
-#Activate wifi
-echo 1 > /dbgfs/htcraphaelmmc_dbg/wifi_pwr
-echo 1 > /dbgfs/htcraphaelmmc_dbg/wifi_cd
+
 echo 1024 > /dbgfs/micropklt_dbg/sleep_leds
 
 if /bin/grep -c 'physkeyboard=fuze' /proc/cmdline >/dev/null ; then
