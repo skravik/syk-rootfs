@@ -190,31 +190,31 @@ DIAMOND=0
 WIFI_TI=0
 WIFI_BCM=0
 ### Is this a Kaiser?
-if [ "`cat /proc/cpuinfo|grep -o Kaiser`" = "Kaiser" ]; then
+if cat /proc/cpuinfo|grep -q Kaiser ; then
 	echo "KAISER detected"
 	KAISER=1
 	WIFI_TI=1
-elif [ "`cat /proc/cpuinfo|grep -o Polaris`" = "Polaris" ]; then
+elif cat /proc/cpuinfo|grep -q Polaris ; then
 	echo "POLARIS detected"
 	KAISER=1
 	WIFI_TI=1
-elif [ "`cat /proc/cpuinfo|grep -o Diamond`" = "Diamond" ]; then
+elif cat /proc/cpuinfo|grep -q Diamond ; then
 	echo "DIAMOND detected"
 	DIAMOND=1
 	WIFI_TI=1
-elif [ "`cat /proc/cpuinfo|grep -o Raphael`" = "Raphael" ]; then
+elif cat /proc/cpuinfo|grep -q Raphael ; then
 	echo "RAPHAEL detected"
 	DIAMOND=1
 	WIFI_TI=1
-elif [ "`cat /proc/cpuinfo|grep -o blackstone`" = "blackstone" ]; then
+elif cat /proc/cpuinfo|grep -q blackstone ; then
 	echo "BLACKSTONE detected"
 	DIAMOND=1
 	WIFI_TI=1
-elif [ "`cat /proc/cpuinfo|grep -o Topaz`" = "Topaz" ]; then
+elif cat /proc/cpuinfo|grep -q Topaz ; then
 	echo "TOPAZ detected"
 	DIAMOND=1
 	WIFI_TI=1
-elif [ "`cat /proc/cpuinfo|grep -o Rhodium`" = "Rhodium" ]; then
+elif cat /proc/cpuinfo|grep -q Rhodium ; then
 	echo "RHODIUM detected"
 	DIAMOND=1
 	WIFI_BCM=1
