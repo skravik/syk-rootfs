@@ -12,31 +12,19 @@ from the root directory of the image.
 
  * Invocation: $ scripts/gitclean.sh
 
-distprepare.py
-==============
-This is a python script written with py2.6 in mind. This script will read a
-map of file and directory permissions from scripts/perms.map. This map will
-have been created from previous releases of the rootfs image. The script will
-adjust all permissions to exactly those listed in the file (it will need root
-access for this).
-
-The script must be run from the root directory of the image. The perms.map file
-must reside in the scripts directory.
-
- * Invocation: $ sudo scripts/distprepare.py
+distprepare.py (REMOVED) - This is no longer needed and is removed from the
+repository.
 
 generate-rootfs.sh
 ==================
 This is a quick-and-dirty shell script to generate a rootfs.img from a given
 git repository and, optionally, a given branch. This will do everything from
-check out the repository to build the loopback filesystem itself.
+check out the repository to build the filesystem image.
 
-This script uses the following packager scripts also located in the scripts
-directory: gitclean.sh, distprepare.py
+This script uses the following packager script also located in the scripts
+directory: gitclean.sh
 
-This script does a few things that require root access, including setting up
-permissions and mounting a loopback device. As such, it requires a local sudo
-installation (and consequently, proper configuration).
+This script relies upon the following third party utility: genext2fs
 
 There are a few shell variables used in the script as configuration. They are
 located at the beginning of the script before any commands. Adjust them as you
@@ -45,5 +33,9 @@ see fit, then invoke the script.
 This script is not designed to be run in any particular directory. You may run
 it even in a live development repository (though this is not suggested). It
 will do all work on a temporary git clone, which it then deletes.
+
+If you already have a local clone of the git repository, you can set the REPO
+variable to the directory where the repository is located. This will save you
+some bandwidth by cloning the local repository and not using the network.
 
  * Invocation: $ ./generate-rootfs.sh
