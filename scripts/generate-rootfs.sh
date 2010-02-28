@@ -31,6 +31,7 @@ mkdir rootfs
 cd "${TMPDIR}"/"${REPODIR}"
 ./scripts/gitclean.sh
 cp -a . "${TMPDIR}"/rootfs
+chmod u+s "${TMPDIR}"/rootfs/bin/pppd "${TMPDIR}"/rootfs/bin/su
 
 genext2fs --root "${TMPDIR}"/rootfs -U -b 15360 "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img
 ln -sf "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img "${DESTDIR}"/rootfs.img
