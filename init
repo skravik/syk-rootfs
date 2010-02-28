@@ -372,18 +372,29 @@ if [ "$WIFI_BCM" = "1" ];then
 
 	# extract nvram (todo: clean this up/integrate with TI calibration)
 	if [ ! -e /data/wifi-nvram.txt ]; then
-		insmod /lib/modules/mtdchar.ko
-		mknod /dev/mtd0ro c 90 1
-		mkdir /lib/modules/$(uname -r)
+		for SKIP in 5744 4736;do
+			insmod /lib/modules/mtdchar.ko
+			mknod /dev/mtd0ro c 90 1
+			mkdir /lib/modules/$(uname -r)
 
-		SKIP=5744
+			dd if=/dev/mtd0ro of=/tmp/tempcal bs=8192 count=1 skip=$SKIP
+			rm /dev/mtd0ro
+			rmmod mtdchar
+			rmdir /lib/modules/$(uname -r)
+			dd if=/tmp/tempcal of=/data/wifi-nvram.txt bs=1 count=466
+			rm /tmp/tempcal
+		
+			if dd if=/data/wifi-nvram.txt bs=1 count=1 |hexdump |grep bd > /dev/null;then 
+				break
+			fi;
+		done
+		if [ "$SKIP" = "5744" ];then
+			echo "CDMA Rhodium detected"
+		fi;
+		if [ "$SKIP" = "4736" ];then
+			echo "GSM Rhodium detected"
+		fi;
 
-		dd if=/dev/mtd0ro of=/tmp/tempcal bs=8192 count=1 skip=$SKIP
-		rm /dev/mtd0ro
-		rmmod mtdchar
-		rmdir /lib/modules/$(uname -r)
-		dd if=/tmp/tempcal of=/data/wifi-nvram.txt bs=1 count=466
-		rm /tmp/tempcal
 	fi
 fi
 
