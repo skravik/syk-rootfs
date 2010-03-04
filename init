@@ -372,7 +372,7 @@ if [ "$WIFI_BCM" = "1" ];then
 			dd if=/tmp/tempcal of=/data/wifi-nvram.txt bs=1 count=466
 			rm /tmp/tempcal
 		
-			if dd if=/data/wifi-nvram.txt bs=1 count=1 |hexdump |grep bd > /dev/null;then 
+			if grep nocrc= /data/wifi-nvram.txt 2>&1 > /dev/null;then 
 				break
 			fi;
 		done
