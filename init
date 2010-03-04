@@ -421,6 +421,21 @@ elif /bin/grep -c 'physkeyboard=rhod210' /proc/cmdline >/dev/null ; then
         cp -f /init.etc/keymaps/rhod210_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod210_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod210_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+elif /bin/grep -c 'physkeyboard=rhod100_de' /proc/cmdline >/dev/null ; then
+	echo "USING RHOD100 DE LAYOUT"
+        cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_de_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+elif /bin/grep -c 'physkeyboard=rhod100_fr' /proc/cmdline >/dev/null ; then
+	echo "USING RHOD100 FR LAYOUT"
+        cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_fr_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+elif /bin/grep -c 'physkeyboard=rhod100_uk' /proc/cmdline >/dev/null ; then
+	echo "USING RHOD100 UK LAYOUT"
+        cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_uk_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
 else
         echo "USING OLD KEYMAP"
         cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
