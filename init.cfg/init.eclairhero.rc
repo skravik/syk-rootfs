@@ -153,6 +153,7 @@ on boot
 
 # Define the memory thresholds at which the above process classes will
 # be killed.  These numbers are in pages (4k).
+    setprop wifi.interface wlan0
     setprop ro.FOREGROUND_APP_MEM 1536
     setprop ro.VISIBLE_APP_MEM 2048
     setprop ro.SECONDARY_SERVER_MEM 4096
@@ -498,5 +499,9 @@ service wpa_supplicant /system/bin/wpa_supplicant \
     user wifi
     group wifi inet
     socket wpa_tiwlan0 dgram 660 wifi wifi
+    disabled
+    oneshot
+
+service wlan_loader /etc/wifi/loadit
     disabled
     oneshot
