@@ -153,7 +153,7 @@ on boot
 
 # Define the memory thresholds at which the above process classes will
 # be killed.  These numbers are in pages (4k).
-    setprop wifi.interface wlan0
+    setprop wifi.interface tiwlan0
     setprop ro.FOREGROUND_APP_MEM 1536
     setprop ro.VISIBLE_APP_MEM 2048
     setprop ro.SECONDARY_SERVER_MEM 4096
