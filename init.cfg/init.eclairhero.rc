@@ -245,9 +245,13 @@ on boot
     mkdir /data/btips 0777 bluetooth bluetooth
     mkdir /data/btips/TI 0777 bluetooth bluetooth
     mkdir /data/btips/TI/opp 0777 bluetooth bluetooth
+    mkdir /data/misc/wifi/sockets 0770 wifi wifi
+    mkdir /data/misc/dhcp 0770 dhcp dhcp
+    chown dhcp dhcp /data/misc/dhcp
+    chmod 0   /dev/msm_hw3dc
+
     chown root radio /proc/cmdline
 
-    chmod 0   /dev/msm_hw3dc
     chmod 666 /dev/input/event0
     chmod 666 /dev/input/event1
     chmod 666 /dev/input/event2
