@@ -433,26 +433,6 @@ service dx_drm_server /system/bin/DxDrmServerIpc -f -o allow_other /data/DxDrm/f
     oneshot
 # Discretix DRM change end
 
-service racoon /system/bin/racoon
-    socket racoon stream 600 system system
-    # racoon will setuid to vpn after getting necessary resources.
-    group net_admin
-    disabled
-    oneshot
-
-service mtpd /system/bin/mtpd
-    socket mtpd stream 600 system system
-    user vpn
-    group vpn net_admin net_raw
-    disabled
-    oneshot
-
-service keystore /system/bin/keystore /data/misc/keystore
-    user keystore
-    group keystore
-    socket keystore stream 666
-
-
 service reboot /system/bin/shutdown -r
     disabled
     oneshot
