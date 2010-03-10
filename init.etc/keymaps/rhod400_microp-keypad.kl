@@ -73,9 +73,9 @@ key 52    PERIOD
 # but including what the other keycode should be here so it will work
 # when the kernel is fixed
 key 105   DPAD_UP
-key 103   DPAD_LEFT
-key 108   DPAD_DOWN
-key 106   DPAD_RIGHT
+key 103   DPAD_RIGHT
+key 108   DPAD_LEFT
+key 106   DPAD_DOWN
 
 # These 'hardware' buttons are actually handled by the microp-keypad driver
 key 139   MENU              WAKE_DROPPED
