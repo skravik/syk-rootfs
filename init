@@ -231,11 +231,13 @@ elif [ -f /system/eclairhero.build ] ; then
 	echo "HERO 2.1 BUILD DETECTED -- ECLAIR"
 	RCSCRIPT="eclairhero"
 	RCCONFIG="eclairhero"
+	mount --bind /lib/eclair/hw /system/lib/hw
 
 elif [ -f /system/eclair.build ] ; then
 	echo "Eclair build detected"
 	RCSCRIPT="eclair"
 	RCCONFIG="eclair"
+	mount --bind /lib/eclair/hw /system/lib/hw
 
 elif [ -f /system/tattoo.build ] ; then
 	echo "Tattoo build detected"
@@ -452,6 +454,10 @@ else
 	cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/oldqwerty_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
 fi
+
+cp -af /init.etc/keymaps/qwerty.kcm.bin /init.etc/keymaps/qwerty.kl /etc/keymaps/
+mount --bind /etc/keymaps /system/usr/keychars
+mount --bind /etc/keymaps /system/usr/keylayout
 
 for i in /sys/class/input/input* ; do
         if [ "`cat $i/name`" = "tssc-manager" ] ; then
