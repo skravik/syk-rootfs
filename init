@@ -231,11 +231,13 @@ elif [ -f /system/eclairhero.build ] ; then
 	echo "HERO 2.1 BUILD DETECTED -- ECLAIR"
 	RCSCRIPT="eclairhero"
 	RCCONFIG="eclairhero"
+	mount --bind /lib/eclair/hw /system/lib/hw
 
 elif [ -f /system/eclair.build ] ; then
 	echo "Eclair build detected"
 	RCSCRIPT="eclair"
 	RCCONFIG="eclair"
+	mount --bind /lib/eclair/hw /system/lib/hw
 
 elif [ -f /system/tattoo.build ] ; then
 	echo "Tattoo build detected"
