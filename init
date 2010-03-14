@@ -337,7 +337,7 @@ if [ "$WIFI_TI" = "1" ];then
 	fi
 fi
 
-if [ "$WIFI_BCM" = "1" ];then
+if [ "$WIFI_BCM" = "1" ] && ! [ "$RCCONFIG" = "eclairhero" ] ;then
 	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
 		echo "wifi.interface = eth0" >> /tmp/build.prop
 		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
