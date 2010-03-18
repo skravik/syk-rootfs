@@ -248,6 +248,7 @@ elif [ -f /system/donut.build ] ; then
 	echo "Donut build detected"
 	RCSCRIPT="donut"
 	RCCONFIG="donut"
+	mount --bind /lib/donut/hw /system/lib/hw
 
 elif [ -d /system/lib/donut ] ; then
 	echo "Donut build detected"
