@@ -323,6 +323,8 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 		mount --bind /data/modules /system/lib/modules
 		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
 		ln -s /lib/modules /lib/modules/`uname -r`
+
+		[ -f /etc/wifi/wlan.ko ] && rm /etc/wifi/wlan.ko
 		cp -R /etc/wifi/* /lib/modules/
 		depmod
 	fi
