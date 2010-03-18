@@ -324,7 +324,7 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
 		ln -s /lib/modules /lib/modules/`uname -r`
 		cp -R /etc/wifi/* /lib/modules/
-		depmod -a
+		depmod
 	fi
 	sed -i s/^#wifi/wifi/ /tmp/build.prop
 fi
