@@ -320,13 +320,12 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 			mkdir /data/modules
 		fi
 		mount --bind /data/modules /lib/modules
+		mount --bind /data/modules /system/lib/modules
 		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
-		cd /lib/modules
-		cp wlan.ko /etc/wifi
-		cp bcm4329.ko /etc/wifi
+		ln -s /lib/modules /lib/modules/`uname -r`
+		cp -R /etc/wifi/* /lib/modules/
+		depmod -a
 	fi
-	mount --bind /etc/wifi /system/lib/modules
-
 	sed -i s/^#wifi/wifi/ /tmp/build.prop
 fi
 
