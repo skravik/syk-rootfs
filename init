@@ -248,6 +248,7 @@ elif [ -f /system/donut.build ] ; then
 	echo "Donut build detected"
 	RCSCRIPT="donut"
 	RCCONFIG="donut"
+	mount --bind /lib/donut/hw /system/lib/hw
 
 elif [ -d /system/lib/donut ] ; then
 	echo "Donut build detected"
@@ -314,19 +315,22 @@ if [ -d /data/dropbear/ ] ; then
 fi
 
 if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
-	if [ -e "$card/modules-$(uname -r).tar.gz" ] ;then
+	if [ -e "$card/modules-$(uname -r).tar.gz" ] && ! `strings /data/modules/wlan.ko 2>/dev/null | grep -q "vermagic=$(uname -r)"`; then
 		echo "Installing $card/modules-$(uname -r).tar.gz"
 		if [ ! -d "/data/modules" ] ; then
 			mkdir /data/modules
 		fi
-		mount --bind /data/modules /lib/modules
-		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
-		cd /lib/modules
-		cp wlan.ko /etc/wifi
-		cp bcm4329.ko /etc/wifi
-	fi
-	mount --bind /etc/wifi /system/lib/modules
+		tar xzf $card/modules-$(uname -r).tar.gz -C /data/modules
+		ln -s /data/modules /data/modules/`uname -r`
 
+		[ -f /etc/wifi/wlan.ko ] && rm /etc/wifi/wlan.ko
+		cp -R /etc/wifi/* /data/modules/
+		depmod
+	else
+		echo "Modules already unpacked for this kernel version -- skipping installation of $card/modules-$(uname -r).tar.gz"
+	fi
+	mount --bind /data/modules /lib/modules
+	mount --bind /data/modules /system/lib/modules
 	sed -i s/^#wifi/wifi/ /tmp/build.prop
 fi
 
@@ -448,6 +452,11 @@ elif /bin/grep -c 'physkeyboard=rhod400' /proc/cmdline >/dev/null ; then
         cp -f /init.etc/keymaps/rhod400_microp-keypad.kl /etc/keymaps/microp-keypad.kl
         cp -f /init.etc/keymaps/rhod400_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
         cp -f /init.etc/keymaps/rhod400_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
+elif /bin/grep -c 'physkeyboard=rhod500' /proc/cmdline >/dev/null ; then
+        echo "USING EXPERIMENTAL RHOD500 LAYOUT"
+        cp -f /init.etc/keymaps/rhod500_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+        cp -f /init.etc/keymaps/rhod500_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/rhod500_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
 else
         echo "USING OLD KEYMAP"
         cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
