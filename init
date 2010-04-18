@@ -447,6 +447,11 @@ elif /bin/grep -c 'physkeyboard=rhod100_uk' /proc/cmdline >/dev/null ; then
         cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod100_uk_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+elif /bin/grep -c 'physkeyboard=rhod100_nordic' /proc/cmdline >/dev/null ; then
+	echo "USING RHOD100 NORDIC LAYOUT"
+        cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_nordic_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
 elif /bin/grep -c 'physkeyboard=rhod400' /proc/cmdline >/dev/null ; then
         echo "USING EXPERIMENTAL RHOD400 LAYOUT"
         cp -f /init.etc/keymaps/rhod400_microp-keypad.kl /etc/keymaps/microp-keypad.kl
