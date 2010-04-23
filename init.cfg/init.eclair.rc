@@ -79,7 +79,7 @@ loglevel 3
 # create basic filesystem structure
     mkdir /data/misc 01771 system misc
     mkdir /data/misc/bluetoothd 0770 bluetooth bluetooth
-    mkdir /data/misc/keystore 0770 keystore keystore
+    mkdir /data/misc/keystore 0770 1017 1017
     mkdir /data/misc/vpn 0770 system system
     mkdir /data/misc/vpn/profiles 0770 system system
 
@@ -387,8 +387,8 @@ service mtpd /system/bin/mtpd
     oneshot
 
 service keystore /system/bin/keystore /data/misc/keystore
-    user keystore
-    group keystore
+    user 1017
+    group 1017
     socket keystore stream 666
 
 service wlan_loader /etc/wifi/loadit
