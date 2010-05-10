@@ -335,6 +335,7 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 fi
 
 if [ "$WIFI_TI" = "1" ];then
+	mount --bind /etc/libs/libhardware_legacy_ti.so /system/lib/libhardware_legacy.so
 	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
 		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
 		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
