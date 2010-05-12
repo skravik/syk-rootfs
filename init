@@ -334,8 +334,8 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 	sed -i s/^#wifi/wifi/ /tmp/build.prop
 fi
 
+mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
 if [ "$WIFI_TI" = "1" ];then
-	mount --bind /etc/libs/libhardware_legacy_ti.so /system/lib/libhardware_legacy.so
 	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
 		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
 		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
@@ -352,7 +352,6 @@ if [ "$WIFI_BCM" = "1" ] ;then
 
 	mount --bind /etc/wifi/bcm432x/dhcpcd.conf /system/etc/dhcpcd/dhcpcd.conf
 	mount --bind /etc/wifi/bcm432x/wpa_supplicant.conf /system/etc/wifi/wpa_supplicant.conf
-	mount --bind /etc/wifi/bcm432x/bcm4325-libhardware_legacy.so /system/lib/libhardware_legacy.so
 
 	# init.rc: fix wpa_supplicant service
 	sed -i s/-itiwlan0/-ieth0/ /etc/init.rc
