@@ -156,9 +156,11 @@ mount /data/etc /etc
 cp -a /system/etc/* /etc
 cp -ar /init.etc/* /etc/
 
-#Possible fix for looping animation.
+#Possible fix for looping animation. stinebd/gm112
+#First push by babijoee :)
 chown 1002:1002 /etc/dbus.conf
 chmod 440 /etc/dbus.conf
+
 
 LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
 
