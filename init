@@ -7,7 +7,7 @@ fail() {
 
 /bin/mount -o remount,rw / /
 
-PATH=/sbin:/system/sbin:/system/bin:/bin:/system/xbin:/system/xbin/bb:/data/local/bin
+PATH=/sbin:/system/sbin:/bin:/system/bin:/system/xbin:/system/xbin/bb:/data/local/bin
 
 /bin/echo "Rootfs loaded."
 
@@ -155,12 +155,6 @@ fi
 mount /data/etc /etc
 cp -a /system/etc/* /etc
 cp -ar /init.etc/* /etc/
-
-#Possible fix for looping animation. stinebd/gm112
-#First push by babijoee :)
-chown 1002:1002 /etc/dbus.conf
-chmod 440 /etc/dbus.conf
-
 
 LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
 
