@@ -437,12 +437,12 @@ service dumpstate /system/bin/dumpstate -s
     oneshot
 
 service hciattach /system/bin/hciattach \
-    -n -s 115200 /dev/ttyHS0 texasalt 4000000 flow
+    -n -s 115200 /dev/ttyHS0 texas 115200 flow
     user bluetooth
     group bluetooth net_bt_admin
     disabled
 
-service wlan_loader /etc/wifi/loadit
+service wlan_loader /etc/wifi/loadit-froyo
     disabled
     oneshot
 
