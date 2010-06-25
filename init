@@ -239,6 +239,12 @@ elif [ -f /system/eclair.build ] ; then
 	RCCONFIG="eclair"
 	mount --bind /lib/eclair/hw /system/lib/hw
 
+elif [ -f /system/froyo.build ] ; then
+	echo "Froyo build detected"
+	RCSCRIPT="froyo"
+	RCCONFIG="froyo"
+	mount --bind /lib/froyo/hw /system/lib/hw
+
 elif [ -f /system/tattoo.build ] ; then
 	echo "Tattoo build detected"
 	RCSCRIPT="tattoo"
@@ -334,7 +340,14 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 	sed -i s/^#wifi/wifi/ /tmp/build.prop
 fi
 
-mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
+if [ -f /system/eclair.build ]
+then
+	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
+elif [ -f /system/froyo.build ]
+then
+	mount --bind /lib/froyo/libhardware_legacy.so /system/lib/libhardware_legacy.so
+fi
+
 if [ "$WIFI_TI" = "1" ];then
 	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
 		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
