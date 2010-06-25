@@ -343,9 +343,9 @@ fi
 if [ -f /system/eclair.build ]
 then
 	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
-elif [ -f /system/froyo.build ]
-then
-	mount --bind /lib/froyo/libhardware_legacy.so /system/lib/libhardware_legacy.so
+#elif [ -f /system/froyo.build ]
+#then
+#	mount --bind /lib/froyo/libhardware_legacy.so /system/lib/libhardware_legacy.so
 fi
 
 if [ "$WIFI_TI" = "1" ];then
