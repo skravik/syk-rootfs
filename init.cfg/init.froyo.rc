@@ -6,7 +6,7 @@ sysclktz 0
 loglevel 3
 
 # setup the global environment
-    export PATH /sbin:/system/sbin:/system/bin:/system/xbin
+    export PATH /bin:/sbin:/system/sbin:/system/bin:/system/xbin:/system/xbin/bb:/data/local/bin
     export LD_LIBRARY_PATH /system/lib
     export ANDROID_BOOTLOGO 1
     export ANDROID_ROOT /system
@@ -317,7 +317,7 @@ on boot
 
 ## Daemon processes to be run by init.
 ##
-service console /system/bin/sh
+service console /bin/sh
     console
 
 # adbd is controlled by the persist.service.adb.enable system property
@@ -457,6 +457,6 @@ service wpa_supplicant /system/bin/wpa_supplicant \
     disabled
     oneshot
 
-service dhcpcd /system/bin/dhcpcd -BKL tiwlan0
+service dhcpcd /system/bin/dhcpcd -ABKL
     disabled
     oneshot
