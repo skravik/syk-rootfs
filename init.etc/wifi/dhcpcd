@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if cat /proc/cpuinfo|grep -q Rhodium ; then
+	IFNAME=eth0
+else
+	IFNAME=tiwlan0
+fi
+
+if [ -z $(getprop net.hostname) ]
+then
+	HOSTNAME=xdandroid
+else
+	HOSTNAME=$(getprop net.hostname)
+fi
+
+/system/bin/dhcpcd $* -h $HOSTNAME $IFNAME

@@ -459,6 +459,6 @@ service wpa_supplicant /system/bin/wpa_supplicant \
     disabled
     oneshot
 
-service dhcpcd /system/bin/dhcpcd -dABKL
+service dhcpcd /etc/wifi/dhcpcd -dABKL
     disabled
     oneshot
