@@ -245,7 +245,7 @@ elif [ -f /system/froyo.build ] ; then
 	RCCONFIG="froyo"
 	mount --bind /lib/froyo/hw /system/lib/hw
 
-	# vold: Fix sdcard device location for CDMA boards
+	# vold: Fix sdcard device location for CDMA boards (thanks paalsteek)
 	if [ -d /sys/devices/platform/msm_sdcc.3 ]; then
 		/bin/sed -i -e 's:/sys/devices/platform/msm_sdcc\.2:/sys/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
 	fi
