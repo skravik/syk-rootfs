@@ -177,6 +177,7 @@ KAISER=0
 DIAMOND=0
 WIFI_TI=0
 WIFI_BCM=0
+XPERIA=0
 ### Is this a Kaiser?
 if cat /proc/cpuinfo|grep -q Kaiser ; then
 	echo "KAISER detected"
@@ -201,6 +202,10 @@ elif cat /proc/cpuinfo|grep -q blackstone ; then
 elif cat /proc/cpuinfo|grep -q Topaz ; then
 	echo "TOPAZ detected"
 	DIAMOND=1
+	WIFI_TI=1
+elif cat /proc/cpuinfo|grep -q Venus ; then
+	echo "XPERIA detected"
+	XPERIA=1
 	WIFI_TI=1
 elif cat /proc/cpuinfo|grep -q Rhodium ; then
 	echo "RHODIUM detected"
@@ -305,6 +310,9 @@ if [ $KAISER -eq 1 ] ; then
 	RCSCRIPT="$RCSCRIPT.kaiser"
 fi
 
+if [ $XPERIA -eq 1 ] ; then
+	echo "ro.sf.hwrotation=180" >> /etc/default.prop
+fi
 echo "using /init.$RCSCRIPT.rc as init.rc"
 echo "using $card/conf/$RCCONFIG.user.conf"
 
@@ -483,6 +491,14 @@ elif /bin/grep -c 'physkeyboard=rhod500' /proc/cmdline >/dev/null ; then
         cp -f /init.etc/keymaps/rhod500_microp-keypad.kl /etc/keymaps/microp-keypad.kl
         cp -f /init.etc/keymaps/rhod500_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
         cp -f /init.etc/keymaps/rhod500_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
+elif /bin/grep -c 'physkeyboard=kovsq' /proc/cmdline >/dev/null ; then
+	echo "USING KOVSKY QWERTY LAYOUT"
+	cp -f /init.etc/keymaps/kovsky-qwerty.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/kovsky-qwerty.kcm.bin /etc/keymaps/microp-keymap.kcm.bin
+elif /bin/grep -c 'physkeyboard=kovsa' /proc/cmdline >/dev/null; then
+	echo "USING KOVSKY AZERTY LAYOUT"
+	cp -f /init.etc/keymaps/kovsky-azerty.kl /etc/keymaps/microp-keymap.kl
+	cp -f /init.etc/keymaps/kovsky-azerty.kcm.bin /etc/keymaps/microp-keymap.kcm.bin
 else
         echo "USING OLD KEYMAP"
         cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
