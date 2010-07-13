@@ -494,11 +494,11 @@ elif /bin/grep -c 'physkeyboard=rhod500' /proc/cmdline >/dev/null ; then
 elif /bin/grep -c 'physkeyboard=kovsq' /proc/cmdline >/dev/null ; then
 	echo "USING KOVSKY QWERTY LAYOUT"
 	cp -f /init.etc/keymaps/kovsky-qwerty.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/kovsky-qwerty.kcm.bin /etc/keymaps/microp-keymap.kcm.bin
+	cp -f /init.etc/keymaps/kovsky-qwerty.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 elif /bin/grep -c 'physkeyboard=kovsa' /proc/cmdline >/dev/null; then
 	echo "USING KOVSKY AZERTY LAYOUT"
-	cp -f /init.etc/keymaps/kovsky-azerty.kl /etc/keymaps/microp-keymap.kl
-	cp -f /init.etc/keymaps/kovsky-azerty.kcm.bin /etc/keymaps/microp-keymap.kcm.bin
+	cp -f /init.etc/keymaps/kovsky-azerty.kl /etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/kovsky-azerty.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 else
         echo "USING OLD KEYMAP"
         cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
