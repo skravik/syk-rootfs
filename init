@@ -153,7 +153,9 @@ fi
 /bin/rm -rf /data/etc
 /bin/mkdir -m 0755 /data/etc
 /bin/mkdir -p -m 0700 /data/mnt/secure
+/bin/mkdir -p -m 0700 /data/mn/asec
 mount --bind /data/mnt/secure /mnt/secure
+mount --bind /data/mnt/asec /mnt/asec
 mount /data/etc /etc
 cp -a /system/etc/* /etc
 cp -ar /init.etc/* /etc/
