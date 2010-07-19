@@ -152,6 +152,10 @@ fi
 
 /bin/rm -rf /data/etc
 /bin/mkdir -m 0755 /data/etc
+/bin/mkdir -p -m 0700 /data/mnt/secure
+/bin/mkdir -p -m 0700 /data/mnt/asec
+mount --bind /data/mnt/secure /mnt/secure
+mount --bind /data/mnt/asec /mnt/asec
 mount /data/etc /etc
 cp -a /system/etc/* /etc
 cp -ar /init.etc/* /etc/
@@ -215,8 +219,6 @@ else
 	echo "VOGUE detected"
 	sed -i s/^wifi/#wifi/ /tmp/build.prop
 fi
-
-mount --bind /tmp/build.prop /system/build.prop
 
 ### Fix su on some builds...
 mount --bind /bin/su /system/bin/su 2> /dev/null
@@ -326,10 +328,10 @@ ifconfig usb0 192.168.20.1 up
 busybox telnetd -b 192.168.20.1 -l /bin/sh
 #chmod 4755 /bin/su
 #mkdir -m 0777 /smodem
+mknod /dev/urandom c 1 9
 if [ -d /data/dropbear/ ] ; then
 	echo "Starting SSH"
 	mknod /dev/random c 1 8
-	mknod /dev/urandom c 1 9
 	/bin/dropbear -r /data/dropbear/dropbear_rsa_host_key -s
 fi
 
@@ -418,6 +420,7 @@ if [ "$WIFI_BCM" = "1" ] ;then
 	fi
 fi
 
+mount --bind /tmp/build.prop /system/build.prop
 
 if [ -f "$card/conf/$RCCONFIG.user.conf" ]; then
 	/bin/userinit.sh -c "$card/conf/$RCCONFIG.user.conf"
@@ -543,5 +546,14 @@ mknod /dev/msm_camera/control0 c 250 0
 mknod /dev/msm_camera/config0 c 250 1
 mknod /dev/msm_camera/frame0 c 250 2
 chmod a+s /bin/pppd
+
+# Generate a "serial number" for the Android system to identify the device.
+# Put it in /data so it survives reboots. Won't survive a factory reset, though.
+[ -f "/data/serialno" ] || echo -e `cat /dev/urandom | tr -dc 'A-Z0-9' | fold -w 12 | head -n 1` >/data/serialno
+
+SERIALNO=$(cat /data/serialno)
+cp /proc/cmdline /tmp/cmdline
+sed -i -e "s:$: androidboot.serialno=${SERIALNO}:" /tmp/cmdline
+mount --bind /tmp/cmdline /proc/cmdline
 
 exec /init.android
