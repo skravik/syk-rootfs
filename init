@@ -207,7 +207,7 @@ elif cat /proc/cpuinfo|grep -q Topaz ; then
 	echo "TOPAZ detected"
 	DIAMOND=1
 	WIFI_TI=1
-elif cat /proc/cpuinfo|grep -q Venus ; then
+elif cat /proc/cpuinfo|grep -q Kovsky ; then
 	echo "XPERIA detected"
 	XPERIA=1
 	WIFI_TI=1
