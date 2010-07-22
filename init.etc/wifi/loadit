@@ -18,9 +18,10 @@ if [ ! -e /data/wifi-calibration ]; then
 	dd if=/tmp/tempcal of=/data/wifi-calibration bs=1 count=752 skip=64
 	rm /sdcard/tempcal
 fi
-FIRMWARE=/etc/wifi/Fw1251r1c.bin
-if cat /proc/cpuinfo|grep -q Venus ; then
-	FIRMWARE=/etc/wifi/Fw1251r1c-x1.bin
+CONFIG=/etc/wifi/tiwlan.ini
+CALIBRATION=/data/wifi-calibration
+if cat /proc/cpuinfo|grep -q Kovsky ; then
+#	CONFIG=/etc/wifi/tiwlanx1.ini
+	CALIBRATION=/proc/calibration #seems no calibration is better than a calibration here
 fi
-
-/etc/wifi/wlan_loader -f $FIRMWARE -e /data/wifi-calibration -i /etc/wifi/tiwlan.ini
+/etc/wifi/wlan_loader -f /etc/wifi/Fw1251r1c.bin -e $CALIBRATION -i $CONFIG
