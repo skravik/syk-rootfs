@@ -449,6 +449,12 @@ elif /bin/grep -c 'physkeyboard=raph' /proc/cmdline >/dev/null ; then
 elif /bin/grep -c 'physkeyboard=nordic_raph' /proc/cmdline >/dev/null ; then
 	echo "USING NEW NORDIC RAPH LAYOUT"
         cp -f /init.etc/keymaps/raphfix_microp-keypad-swedish.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+elif /bin/grep -c 'physkeyboard=german_raph' /proc/cmdline >/dev/null ; then
+	echo "USING NEW GERMAN RAPH LAYOUT"
+        cp -f /init.etc/keymaps/microp-german.keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+elif /bin/grep -c 'physkeyboard=swiss_raph' /proc/cmdline >/dev/null ; then
+	echo "USING NEW SWISS RAPH LAYOUT"
+        cp -f /init.etc/keymaps/microp-swiss.keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 elif /bin/grep -c 'physkeyboard=tilt2' /proc/cmdline >/dev/null ; then
 	echo "USING EXPERIMENTAL TILT2 LAYOUT"
         cp -f /init.etc/keymaps/tilt2_microp-keypad.kl /etc/keymaps/microp-keypad.kl
