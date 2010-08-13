@@ -24,7 +24,9 @@ if [ $notnand = "0" ] ; then
 fi
 
 
-partition=mmcblk0p1
+partition=`/bin/grep -o "sdcard_part=.*" /proc/cmdline | /bin/sed -e "s/.*sdcard_part=//g" -e "s/ .*//g"`
+[ "$partition" == "" ] && partition=mmcblk0p1
+echo "Assuming sdcard FAT partition is at /dev/block/$partition"
 
 # Try unpartitioned card
 if [ ! -d /sys/block/mmcblk0/$partition ] ; then
