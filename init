@@ -82,12 +82,6 @@ if [ $notnand = "1" ] ; then
             fi
     fi
     
-    if [ -f $card/backupsystem/installedsystem.sqsh -o -f $card/backupsystem/installedsystem.img -o -f $card/backupsystem.ext2 ]; then
-            echo "Partitioned Build Detected"
-    else
-            PARTITIONED=0
-    fi
-    
     if [ $PARTITIONED -lt 2 ] ; then
 	     
             if [ ! -f $card/data.img ] ; then
