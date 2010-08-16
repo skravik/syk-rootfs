@@ -33,7 +33,7 @@ cd "${TMPDIR}"/"${REPODIR}"
 cp -a . "${TMPDIR}"/rootfs
 chmod u+s "${TMPDIR}"/rootfs/bin/pppd "${TMPDIR}"/rootfs/bin/su
 
-genext2fs --root "${TMPDIR}"/rootfs -U -b 15360 "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img
+genext2fs --root "${TMPDIR}"/rootfs -U -N 1024 -m 1 -b 15360 "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img
 ln -sf "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img "${DESTDIR}"/rootfs.img
 
 cd "${TMPDIR}"
