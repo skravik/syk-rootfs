@@ -37,7 +37,7 @@ fi
 
 #mkdir -m 0777 /sdcard
 #fsck already done in initrd
-mount -t vfat -o fmask=0000,dmask=0000,rw,flush,noatime,nodiratime /dev/block/$partition /sdcard
+mount -t vfat -o fmask=0000,dmask=0000,rw,relatime /dev/block/$partition /sdcard
 [ $? -eq 0 ] || fail "Failed to mount the SD card. Cannot continue."
 
 if [ ! -d /sdcard/cache ] ; then
