@@ -24,9 +24,7 @@ if [ $notnand = "0" ] ; then
 fi
 
 
-partition=`/bin/grep -o "sdcard_part=.*" /proc/cmdline | /bin/sed -e "s/.*sdcard_part=//g" -e "s/ .*//g"`
-[ "$partition" == "" ] && partition=mmcblk0p1
-echo "Assuming sdcard FAT partition is at /dev/block/$partition"
+partition=mmcblk0p1
 
 # Try unpartitioned card
 if [ ! -d /sys/block/mmcblk0/$partition ] ; then
@@ -73,17 +71,14 @@ if [ $notnand = "1" ] ; then
             echo "done"
     fi
     
-    PARTITIONED=0
-    echo "Checking for partition..."
-    if [ -d /sys/block/mmcblk0/mmcblk0p2 ] ; then
-            PARTITIONED=1
-            if [ -d /sys/block/mmcblk0/mmcblk0p3 ] ; then
-                    PARTITIONED=2
-            fi
-    fi
-    
-    if [ $PARTITIONED -lt 2 ] ; then
-	     
+    if [ -d /sys/block/mmcblk0/mmcblk0p4 ] && /bin/grep -q -v no_partitions /proc/cmdline ; then
+	    echo "Using partitioned system"
+	    /bin/e2fsck -y /dev/block/mmcblk0p3
+	    mount -t ext2 -o ro,relatime /dev/block/mmcblk0p3 /system
+	    /bin/e2fsck -y /dev/block/mmcblk0p4
+	    mount -t ext2 -o relatime /dev/block/mmcblk0p4 /data
+    else
+	    echo "Using loopback filesystems"
             if [ ! -f $card/data.img ] ; then
                     echo "Creating a new Data store"
                     dd if=/dev/zero of=$card/data.img bs=1048576 count=256
@@ -91,45 +86,32 @@ if [ $notnand = "1" ] ; then
                     mke2fs -F $card/data.img
                     [ $? -eq 0 ] || fail "Failed to format the storage"
             fi
-    fi
-    
-    if [ $PARTITIONED -lt 2 ] ; then
+
             losetup /dev/block/loop0 $card/data.img
             [ $? -eq 0 ] || fail "Failed to find data.img on SD Card"
             e2fsck -y /dev/block/loop0
-            mount -t ext2 -o noatime,nodiratime,sync /dev/block/loop0 /data
-    else
-            e2fsck -y /dev/block/mmcblk0p3
-            mount -t ext2 -o noatime,nodiratime /dev/block/mmcblk0p3 /data
-    fi
-    [ $? -eq 0 ] || fail "Failed to mount /data"
-    
-    if [ $PARTITIONED -eq 0 ] ; then
+            mount -t ext2 -o relatime /dev/block/loop0 /data
+
             if      [ -f $card/system.ext2 ] ; then
                     echo "Using uncompressed system"
                     losetup /dev/block/loop1 $card/system.ext2
                     [ $? -eq 0 ] || fail "Failed to reach system.ext2 on SD Card"
                     e2fsck -y /dev/block/loop1
-                    mount -t ext2 -o noatime,nodiratime /dev/block/loop1 /system
+                    mount -t ext2 -o relatime /dev/block/loop1 /system
 		    [ $? -eq 0 ] || fail "Failed to mount /system"
             elif    
 		    [ -f $card/system.sqsh ] ; then
                     echo "Using SquashFS system"
                     losetup /dev/block/loop1 $card/system.sqsh
                     [ $? -eq 0 ] || fail "Failed to find system.sqsh on SD Card"
-                    mount -t squashfs -o ro,noatime,nodiratime /dev/block/loop1 /system
+                    mount -t squashfs -o ro,relatime /dev/block/loop1 /system
                     [ $? -eq 0 ] || fail "Failed to mount /system"
             else
                     losetup /dev/block/loop1 $card/system.img
                     [ $? -eq 0 ] || fail "Failed to find system.img on SD Card"
-                    mount -t cramfs -o ro,noatime,nodiratime /dev/block/loop1 /system
+                    mount -t cramfs -o ro,relatime /dev/block/loop1 /system
                     [ $? -eq 0 ] || fail "Failed to mount /system"
             fi
-    else
-            echo "Using partitioned system"
-            e2fsck -y /dev/block/mmcblk0p2
-            mount -t ext2 -o ro,noatime,nodiratime /dev/block/mmcblk0p2 /system
-            [ $? -eq 0 ] || fail "Failed to mount /system"
     fi
 fi
 
