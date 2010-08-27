@@ -319,7 +319,7 @@ if [ -d /data/dropbear/ ] ; then
 fi
 
 #Only froyo atm
-if [ "$WVGA" = "1" ] && [ "$RCSCRIPT" = "froyo"];then
+if [ "$WVGA" = "1" ] && [ "$RCSCRIPT" = "froyo" ];then
 	mount --bind /lib/froyo/hw/gralloc.msm7k_wvga.so /lib/froyo/hw/gralloc.msm7k.so
 fi
 
