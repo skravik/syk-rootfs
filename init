@@ -160,6 +160,7 @@ DIAMOND=0
 WIFI_TI=0
 WIFI_BCM=0
 XPERIA=0
+WVGA=0
 ### Is this a Kaiser?
 if cat /proc/cpuinfo|grep -q Kaiser ; then
 	echo "KAISER detected"
@@ -181,18 +182,22 @@ elif cat /proc/cpuinfo|grep -q blackstone ; then
 	echo "BLACKSTONE detected"
 	DIAMOND=1
 	WIFI_TI=1
+	WVGA=1
 elif cat /proc/cpuinfo|grep -q Topaz ; then
 	echo "TOPAZ detected"
 	DIAMOND=1
 	WIFI_TI=1
+	WVGA=1
 elif cat /proc/cpuinfo|grep -q Kovsky ; then
 	echo "XPERIA detected"
 	XPERIA=1
 	WIFI_TI=1
+	WVGA=1
 elif cat /proc/cpuinfo|grep -q Rhodium ; then
 	echo "RHODIUM detected"
 	DIAMOND=1
 	WIFI_BCM=1
+	WVGA=1
 else
 	echo "VOGUE detected"
 	sed -i s/^wifi/#wifi/ /tmp/build.prop
@@ -311,6 +316,11 @@ if [ -d /data/dropbear/ ] ; then
 	echo "Starting SSH"
 	mknod /dev/random c 1 8
 	/bin/dropbear -r /data/dropbear/dropbear_rsa_host_key -s
+fi
+
+#Only froyo atm
+if [ "$WVGA" = "1" ] && [ "$RCSCRIPT" = "froyo"];then
+	mount --bind /lib/froyo/hw/gralloc.msm7k_wvga.so /lib/froyo/hw/gralloc.msm7k.so
 fi
 
 if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
