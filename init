@@ -321,7 +321,7 @@ fi
 #Only froyo atm
 if [ "$WVGA" = "1" ] && [ "$RCSCRIPT" = "froyo" ];then
 	mount --bind /lib/froyo/hw/gralloc.msm7k_wvga.so /lib/froyo/hw/gralloc.msm7k.so
-	mount --bind /lib/froyo/hw/gralloc.msm7k_wvga.so /system/lib/froyo/hw/gralloc.msm7k.so
+	mount --bind /lib/froyo/hw/gralloc.msm7k_wvga.so /system/lib/hw/gralloc.msm7k.so
 fi
 
 if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
