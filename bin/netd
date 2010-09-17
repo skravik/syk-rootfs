@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 modprobe ipt_MASQUERADE
 modprobe xt_state
