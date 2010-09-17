@@ -344,7 +344,7 @@ service vold /system/bin/vold
     socket vold stream 0660 root mount
     ioprio be 2
 
-service netd /system/bin/netd
+service netd /bin/netd
     socket netd stream 0660 root system
 
 service debuggerd /system/bin/debuggerd
