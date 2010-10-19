@@ -5,7 +5,7 @@ key 103   DPAD_UP           WAKE_DROPPED
 key 105   DPAD_LEFT         WAKE_DROPPED
 key 108   DPAD_DOWN         WAKE_DROPPED
 key 106   DPAD_RIGHT        WAKE_DROPPED
-key 139   HOME              WAKE_DROPPED
+key 102   HOME              WAKE_DROPPED
 key 158   BACK              WAKE_DROPPED
 key 107   ENDCALL           WAKE_DROPPED
 key 231   CALL              WAKE_DROPPED
