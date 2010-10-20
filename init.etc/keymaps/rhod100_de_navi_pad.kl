@@ -6,7 +6,7 @@
 # v1.1 2010/02/06
 # HOME and POWER buttons swaped over.
 
-key 102   HOME              WAKE # Power button
+key 116   POWER             WAKE
 key 107   ENDCALL           WAKE_DROPPED
 key 114   VOLUME_DOWN
 key 115   VOLUME_UP
