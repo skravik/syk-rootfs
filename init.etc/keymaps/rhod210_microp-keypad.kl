@@ -1,6 +1,8 @@
 # HTC Touch Pro 2 'Wing 2' (RHOD210) Android keyboard layout
 # Adam Williamson <adamwill AT shaw DOT ca>
 
+# v1.2 2010/10/18
+# - fixed dpad mapping, working correctly now. Done by XirXes.
 # v1.1 2010/02/03
 #	- don't wake on 'dpad' presses are they're not front buttons
 #	- fix keypad arrows (as close as possible for now)
@@ -66,9 +68,9 @@ key 52    PERIOD
 # but including what the other keycode should be here so it will work
 # when the kernel is fixed
 key 105   DPAD_UP
-key 103   DPAD_LEFT
-key 108   DPAD_DOWN
-key 106   DPAD_RIGHT
+key 108   DPAD_LEFT
+key 106   DPAD_DOWN
+key 103   DPAD_RIGHT
 
 # These 'hardware' buttons are actually handled by the microp-keypad driver
 key 139   MENU              WAKE_DROPPED
