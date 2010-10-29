@@ -106,6 +106,7 @@ if [ $notnand = "1" ] ; then
                     [ $? -eq 0 ] || fail "Failed to find system.sqsh on SD Card"
                     mount -t squashfs -o ro,relatime /dev/block/loop1 /system
                     [ $? -eq 0 ] || fail "Failed to mount /system"
+		    SQUASH=1
             else
                     losetup /dev/block/loop1 $card/system.img
                     [ $? -eq 0 ] || fail "Failed to find system.img on SD Card"
@@ -114,6 +115,22 @@ if [ $notnand = "1" ] ; then
             fi
     fi
 fi
+
+if [ -f "$card/update.zip" ] && [ ! -f "/sdcard/cache/recovery/intent" ] && [ -z "$SQUASH" ]
+then
+	RECOVERYCARD=$(echo $card | sed -e 's:/sdcard/:SDCARD\::')
+
+	echo "STARTING OTA UPDATE SYSTEM"
+	cp /init.cfg/init.recovery.rc /etc/init.rc
+	mkdir /cache/recovery
+	echo "--update_package=${RECOVERYCARD}/update.zip" >/cache/recovery/command
+	echo "--send_intent=complete" >>/cache/recovery/command
+	exec /init.android
+fi
+
+# If not updating, ensure old recovery.intent and update.zip files are removed so we can update again later.
+rm -f /sdcard/cache/recovery/intent
+rm -f $card/update.zip
 
 if [ -d $card/AndroidApps ] ; then
         echo Copying Applications
