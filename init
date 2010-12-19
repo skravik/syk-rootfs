@@ -257,6 +257,17 @@ elif [ -f /system/froyo.build ] ; then
 		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
 	fi
 
+elif [ -f /system/gingerbread.build ] ; then
+	echo "Gingerbread build detected"
+	RCSCRIPT="gingerbread"
+	RCCONFIG="gingerbread"
+	mount --bind /lib/froyo/hw /system/lib/hw
+
+	# vold: Fix sdcard device location for CDMA boards (thanks paalsteek)
+	if [ -d /sys/devices/platform/msm_sdcc.3 ]; then
+		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
+	fi
+
 elif [ -f /system/tattoo.build ] ; then
 	echo "Tattoo build detected"
 	RCSCRIPT="tattoo"
