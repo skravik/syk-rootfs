@@ -1,3 +1,5 @@
+on early-init
+    start ueventd
 
 on init
     export PATH /bin:/sbin:/system/sbin:/system/bin:/system/xbin:/system/xbin/bb:/data/local/bin
@@ -22,10 +24,12 @@ on boot
     class_start default
 
 
+service ueventd /sbin/ueventd
+    critical
+
 service recovery /system/bin/recovery
 
 service adbd /system/bin/adbd recovery
-    enabled
 
 on property:persist.service.adb.enable=1
     start adbd
