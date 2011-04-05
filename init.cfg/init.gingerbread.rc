@@ -470,3 +470,8 @@ service wpa_supplicant /system/bin/wpa_supplicant \
 service dhcpcd /system/bin/dhcpcd -ABKL
     disabled
     oneshot
+
+service pppd_gprs /system/bin/pppd /dev/smd1 defaultroute local usepeerdns \
+    noipdefault unit 0 nodetach novj novjccomp
+    disabled
+    oneshot
