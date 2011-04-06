@@ -471,6 +471,6 @@ service dhcpcd /system/bin/dhcpcd -ABKL
     oneshot
 
 service pppd_gprs /system/bin/pppd /dev/smd1 defaultroute local usepeerdns \
-    noipdefault unit 0 nodetach novj novjccomp
+    noipdefault unit 0 nodetach linkname gprs novj novjccomp
     disabled
     oneshot
