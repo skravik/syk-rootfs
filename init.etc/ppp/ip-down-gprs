@@ -1,8 +1,6 @@
 #!/bin/sh
 case $1 in
 ppp0)
-	/bin/echo -e "PPP connection went down" >> /smodem/ppp.log
-	/bin/echo -e "Done!" >> /smodem/ppp.log
 	;;
 ppp1)
 	echo 0 > /proc/sys/net/ipv4/ip_forward;
