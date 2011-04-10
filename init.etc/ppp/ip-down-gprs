@@ -7,8 +7,11 @@ ppp1)
 	;;
 esac
 
+# Use yyy of ip-xx-yyy in program name
+LINK=`echo $0 | cut -d- -f3`
+NAME=${LINK:-"$LINKNAME"}
 # Use interface name if linkname is not available
-NAME=${LINKNAME:-"$1"}
+NAME=${NAME:-"$1"}
 
 /system/bin/setprop "net.$NAME.dns1" "$DNS1"
 /system/bin/setprop "net.$NAME.dns2" "$DNS2" 
