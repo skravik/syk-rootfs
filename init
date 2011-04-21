@@ -23,7 +23,6 @@ if [ $notnand = "0" ] ; then
   /bin/mount -t yaffs2 /dev/block/mtdblock3 /data
 fi
 
-
 partition=mmcblk0p1
 
 # Try unpartitioned card
@@ -145,79 +144,136 @@ if [ ! -d $card/media ] ; then
         echo You have no media folder, please extract the resources to your SD card android folder
 fi
 
-/bin/rm -rf /data/etc
-/bin/mkdir -m 0755 /data/etc
-/bin/mkdir -p -m 0700 /data/mnt/secure
-/bin/mkdir -p -m 0700 /data/mnt/asec
+NEW_SYSTEM=0
+NEW_ROOT=0
+
+if [ ! -d /data/etc ]; then
+	/bin/mkdir -m 0755 /data/etc
+	/bin/mkdir -p -m 0700 /data/mnt/secure
+#	/bin/mkdir -p -m 0700 /data/mnt/asec
+	mkdir -m 0770 /data/shared_prefs
+	chown 1000:1000 /data/shared_prefs
+	NEW_SYSTEM=1
+	NEW_ROOT=1
+else
+	CHK_SYS=etc/event-log-tags
+	if [ ! -f /data/$CHK_SYS -o /system/$CHK_SYS -nt /data/$CHK_SYS ]; then
+		NEW_SYSTEM=1
+	fi
+	CHK_ROOT=etc/wifi/Fw1251r1c.bin
+	if [ ! -f /data/$CHK_ROOT -o /init.$CHK_ROOT -nt /data/$CHK_ROOT ]; then
+		NEW_ROOT=1
+	fi
+fi
+
 mount --bind /data/mnt/secure /mnt/secure
-mount --bind /data/mnt/asec /mnt/asec
+#mount --bind /data/mnt/asec /mnt/asec
+mount /data/shared_prefs /shared_prefs
+
+if [ $NEW_SYSTEM -eq 1 ]; then
+	cp -ar /system/etc/* /data/etc
+fi
+if [ $NEW_ROOT -eq 1 ]; then
+	cp -ar /init.etc/* /data/etc
+fi
+
 mount /data/etc /etc
-cp -a /system/etc/* /etc
-cp -ar /init.etc/* /etc/
 
 LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
 
 if [ "$LCDDENSITY" != "" ] ; then
-	echo "ro.sf.lcd_density=$LCDDENSITY" >> /etc/default.prop
-	echo Setting ro.sf.lcd_density=$LCDDENSITY
+	DENS2=`grep lcd_density /etc/default.prop | sed -e 's/.*=//'`
+	if [ "$LCDDENSITY" != "$DENS2" ]; then
+		echo Setting ro.sf.lcd_density=$LCDDENSITY
+		if [ -z "$DENS2" ]; then
+			echo "ro.sf.lcd_density=$LCDDENSITY" >> /etc/default.prop
+		else
+			sed -i /lcd_density/s/=.*/=$LCDDENSITY/ /etc/default.prop
+		fi
+	fi
 fi
-
-if [ ! -d /data/shared_prefs ] ; then
-	mkdir -m 0770 /data/shared_prefs
-fi
-chmod 0770 /data/shared_prefs
-chown 1000:1000 /data/shared_prefs
-mount /data/shared_prefs /shared_prefs
 
 mount /sdcard/cache /tmp
 
-cp /system/build.prop /tmp/build.prop
+
 KAISER=0
 DIAMOND=0
 WIFI_TI=0
 WIFI_BCM=0
 XPERIA=0
 WVGA=0
-### Is this a Kaiser?
-if cat /proc/cpuinfo|grep -q Kaiser ; then
+HW=`cat /proc/cpuinfo | grep Hardware`
+case "$HW" in
+    *Kaiser*)
 	echo "KAISER detected"
+	HW=KAISER
 	KAISER=1
 	WIFI_TI=1
-elif cat /proc/cpuinfo|grep -q Polaris ; then
+	;;
+    *Polaris*)
 	echo "POLARIS detected"
+	HW=POLARIS
 	KAISER=1
 	WIFI_TI=1
-elif cat /proc/cpuinfo|grep -q Diamond ; then
+	;;
+    *Diamond*)
 	echo "DIAMOND detected"
+	HW=DIAMOND
 	DIAMOND=1
 	WIFI_TI=1
-elif cat /proc/cpuinfo|grep -q Raphael ; then
+	;;
+    *Raphael*)
 	echo "RAPHAEL detected"
+	HW=RAPHAEL
 	DIAMOND=1
 	WIFI_TI=1
-elif cat /proc/cpuinfo|grep -q blackstone ; then
+	;;
+    *blackstone*)
 	echo "BLACKSTONE detected"
+	HW=BLACKSTONE
 	DIAMOND=1
 	WIFI_TI=1
 	WVGA=1
-elif cat /proc/cpuinfo|grep -q Topaz ; then
+	;;
+    *Topaz*)
 	echo "TOPAZ detected"
+	HW=TOPAZ
 	DIAMOND=1
 	WIFI_TI=1
 	WVGA=1
-elif cat /proc/cpuinfo|grep -q Kovsky ; then
+	;;
+    *Kovsky*)
 	echo "XPERIA detected"
+	HW=KOVSKY
 	XPERIA=1
 	WIFI_TI=1
 	WVGA=1
-elif cat /proc/cpuinfo|grep -q Rhodium ; then
+	;;
+    *Rhodium*)
 	echo "RHODIUM detected"
+	HW=RHODIUM
 	DIAMOND=1
 	WIFI_BCM=1
 	WVGA=1
-else
+	;;
+    *)
 	echo "VOGUE detected"
-	sed -i s/^wifi/#wifi/ /tmp/build.prop
+	HW=VOGUE
+	;;
+esac
+
+NEW_BPROP=0
+HWS=""
+if [ -f /data/build.prop ]; then
+	HWS=`grep ^#Hardware /data/build.prop | sed -e 's/^.* //'`
+fi
+if [ $NEW_SYSTEM -eq 1 -o $HW != "$HWS" ]; then
+	cp /system/build.prop /data/build.prop
+	NEW_BPROP=1
+	if [ $HW = VOGUE ]; then
+		sed -i s/^wifi/#wifi/ /data/build.prop
+	fi
+	echo "#Hardware $HW" >> /data/build.prop
 fi
 
 ### Fix su on some builds...
@@ -253,7 +309,7 @@ elif [ -f /system/froyo.build ] ; then
 	mount --bind /lib/froyo/hw /system/lib/hw
 
 	# vold: Fix sdcard device location for CDMA boards (thanks paalsteek)
-	if [ -d /sys/devices/platform/msm_sdcc.3 ]; then
+	if [ $NEW_SYSTEM -eq 1 -a -d /sys/devices/platform/msm_sdcc.3 ]; then
 		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
 	fi
 
@@ -263,7 +319,7 @@ elif [ -f /system/gingerbread.build ] ; then
 	RCCONFIG="gingerbread"
 
 	# vold: Fix sdcard device location for CDMA boards (thanks paalsteek)
-	if [ -d /sys/devices/platform/msm_sdcc.3 ]; then
+	if [ $NEW_SYSTEM -eq 1 -a -d /sys/devices/platform/msm_sdcc.3 ]; then
 		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
 	fi
 
@@ -322,13 +378,15 @@ if [ $KAISER -eq 1 ] ; then
 	RCSCRIPT="$RCSCRIPT.kaiser"
 fi
 
-if [ $XPERIA -eq 1 ] ; then
+if [ $NEW_ROOT -eq 1 -a $XPERIA -eq 1 ] ; then
 	echo "ro.sf.hwrotation=180" >> /etc/default.prop
 fi
 echo "using /init.$RCSCRIPT.rc as init.rc"
 echo "using $card/conf/$RCCONFIG.user.conf"
 
-cp "/init.cfg/init.$RCSCRIPT.rc" /etc/init.rc
+if [ $NEW_ROOT -eq 1 ]; then
+	cp "/init.cfg/init.$RCSCRIPT.rc" /etc/init.rc
+fi
 
 #Assume this rootfs.img will be used only on "good" devices
 #Meaning raph/diam/blac/
@@ -346,7 +404,7 @@ if [ -d /data/dropbear/ ] ; then
 fi
 
 if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
-	if [ -e "$card/modules-$(uname -r).tar.gz" ] && ! `strings /data/modules/wlan.ko 2>/dev/null | grep -q "vermagic=$(uname -r)"`; then
+	if [ -e "$card/modules-$(uname -r).tar.gz" ] && ! `strings /data/modules/mac80211.ko 2>/dev/null | grep -q "vermagic=$(uname -r)"`; then
 		echo "Installing $card/modules-$(uname -r).tar.gz"
 		if [ ! -d "/data/modules" ] ; then
 			mkdir /data/modules
@@ -360,41 +418,46 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 	mount --bind /data/modules /lib/modules
 	mount --bind /data/modules /system/lib/modules
 
+	if [ -f /etc/wifi/wlan.ko ]; then
 	cp -R /etc/wifi/* /data/modules/
+	rm /etc/wifi/wlan.ko
 	depmod
+	fi
 
-	[ -f /etc/wifi/wlan.ko ] && rm /etc/wifi/wlan.ko
-
-	sed -i s/^#wifi/wifi/ /tmp/build.prop
+	if [ $NEW_BPROP -eq 1 ]; then
+		sed -i s/^#wifi/wifi/ /data/build.prop
+	fi
 fi
 
-if [ -f /system/eclair.build ]
-then
-	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
-elif [ -f /system/froyo.build ]
-then
-	mount --bind /lib/froyo/libhardware_legacy.so /system/lib/libhardware_legacy.so
-fi
+#if [ -f /system/eclair.build ]
+#then
+#	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
+#elif [ -f /system/froyo.build ]
+#then
+#	mount --bind /lib/froyo/libhardware_legacy.so /system/lib/libhardware_legacy.so
+#fi
 
 # fix PPP data device name
-if [ -f /dev/smd7 ]; then
-	PPPDEV=/dev/smd7
-else
-	PPPDEV=/dev/smd1
+if [ $NEW_ROOT -eq 1 ]; then
+	if [ -f /dev/smd7 ]; then
+		PPPDEV=/dev/smd7
+	else
+		PPPDEV=/dev/smd1
+	fi
+	sed -i s,PPPDEV,$PPPDEV, /etc/init.rc
 fi
-sed -i s,PPPDEV,$PPPDEV, /etc/init.rc
 
 if [ "$WIFI_TI" = "1" ];then
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	if [ "`grep -c ^wifi /data/build.prop`" != "2" ]; then
+		echo "wifi.interface = tiwlan0" >> /data/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /data/build.prop
 	fi
 fi
 
 if [ "$WIFI_BCM" = "1" ] ;then
-	if [ "`grep -c ^wifi /tmp/build.prop`" != "2" ]; then
-		echo "wifi.interface = eth0" >> /tmp/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /tmp/build.prop
+	if [ "`grep -c ^wifi /data/build.prop`" != "2" ]; then
+		echo "wifi.interface = eth0" >> /data/build.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /data/build.prop
 	fi
 
 	# fyi: firmware is loaded from /etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
@@ -402,16 +465,18 @@ if [ "$WIFI_BCM" = "1" ] ;then
 	mount --bind /etc/wifi/bcm432x/dhcpcd.conf /system/etc/dhcpcd/dhcpcd.conf
 	mount --bind /etc/wifi/bcm432x/wpa_supplicant.conf /system/etc/wifi/wpa_supplicant.conf
 
-	# init.rc: fix wpa_supplicant service
-	sed -i s/-itiwlan0/-ieth0/ /etc/init.rc
-	sed -i s/-Dtiwlan0/-Dwext/ /etc/init.rc
+	if [ $NEW_ROOT -eq 1 ]; then
+		# init.rc: fix wpa_supplicant service
+		sed -i s/-itiwlan0/-ieth0/ /etc/init.rc
+		sed -i s/-Dtiwlan0/-Dwext/ /etc/init.rc
 
-	# init.rc: fix dhcpcd service, wifi.interface, and wpa_supplicant service socket
-	sed -i s/tiwlan0/eth0/ /etc/init.rc
+		# init.rc: fix dhcpcd service, wifi.interface, and wpa_supplicant service socket
+		sed -i s/tiwlan0/eth0/ /etc/init.rc
 
-	# init.rc:
-	sed -i s/user\ wifi/#user\ wifi/ /etc/init.rc
-	sed -i s/group\ wifi/#group\ wifi/ /etc/init.rc
+		# init.rc:
+		sed -i s/user\ wifi/#user\ wifi/ /etc/init.rc
+		sed -i s/group\ wifi/#group\ wifi/ /etc/init.rc
+	fi
 
 	# extract nvram (todo: clean this up/integrate with TI calibration)
 	if [ ! -e /data/wifi-nvram.txt ]; then
@@ -441,7 +506,7 @@ if [ "$WIFI_BCM" = "1" ] ;then
 	fi
 fi
 
-mount --bind /tmp/build.prop /system/build.prop
+mount --bind /data/build.prop /system/build.prop
 
 if [ -f "$card/conf/$RCCONFIG.user.conf" ]; then
 	/bin/userinit.sh -c "$card/conf/$RCCONFIG.user.conf"
@@ -572,7 +637,7 @@ mkdir /dev/msm_camera
 mknod /dev/msm_camera/control0 c 250 0
 mknod /dev/msm_camera/config0 c 250 1
 mknod /dev/msm_camera/frame0 c 250 2
-chmod a+s /bin/pppd
+#chmod a+s /bin/pppd
 
 # Generate a "serial number" for the Android system to identify the device.
 # Put it in /data so it survives reboots. Won't survive a factory reset, though.
