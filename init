@@ -429,13 +429,8 @@ if [ $NEW_ROOT -eq 1 ]; then
 	sed -i s,PPPDEV,$PPPDEV, /etc/init.rc
 fi
 
-if [ "$WIFI_TI" = "1" ];then
-	ip link set dev tiwlan0 name wlan0
-fi
 
 if [ "$WIFI_BCM" = "1" ] ;then
-	ip link set dev eth0 name wlan0
-
 	# fyi: firmware is loaded from /etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
 
 	if [ $NEW_ROOT -eq 1 ]; then
