@@ -7,7 +7,7 @@ DESTDIR=~/rootfs-output
 TMPDIR=~/.tmp
 
 # source git repository to clone
-REPO="git://gitorious.org/xdandroid-eclair/eclair-rootfs.git"
+REPO=${REPO:-git://gitorious.org/xdandroid/rootfs.git}
 
 # optional, branch to switch to after cloning
 #BRANCH="fuze-navipad-remap"
@@ -16,8 +16,9 @@ REPO="git://gitorious.org/xdandroid-eclair/eclair-rootfs.git"
 [ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}"
 cd "${TMPDIR}"
 
-REPODIR=${REPO##*/}
-REPODIR=${REPODIR%.*}
+#REPODIR=${REPO##*/}
+#REPODIR=${REPODIR%.*}
+REPODIR=repodir
 git clone "${REPO}" "${REPODIR}"
 cd "${TMPDIR}"/"${REPODIR}"
 [ -z ${BRANCH} ] || git checkout "${BRANCH}"
