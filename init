@@ -135,9 +135,10 @@ if [ -d $card/AndroidApps ] ; then
         echo Copying Applications
         if [ ! -d /data/app ] ; then
                 mkdir -m 0771 /data/app
+		chown -R 1000:1000 /data/app
         fi
-        /bin/cp $card/AndroidApps/* /data/app
-        chown -R 1000:1000 /data/app
+	(cd $card/AndroidApps; for i in *; do if [ "$i" -nt "/data/app/$i" ]; then \
+		cp "$i" /data/app; fi done)
 fi
 
 if [ ! -d $card/media ] ; then
@@ -150,7 +151,6 @@ NEW_ROOT=0
 if [ ! -d /data/etc ]; then
 	/bin/mkdir -m 0755 /data/etc
 	/bin/mkdir -p -m 0700 /data/mnt/secure
-#	/bin/mkdir -p -m 0700 /data/mnt/asec
 	mkdir -m 0770 /data/shared_prefs
 	chown 1000:1000 /data/shared_prefs
 	NEW_SYSTEM=1
@@ -167,7 +167,6 @@ else
 fi
 
 mount --bind /data/mnt/secure /mnt/secure
-#mount --bind /data/mnt/asec /mnt/asec
 mount /data/shared_prefs /shared_prefs
 
 if [ $NEW_SYSTEM -eq 1 ]; then
@@ -194,7 +193,6 @@ if [ "$LCDDENSITY" != "" ] ; then
 fi
 
 mount /sdcard/cache /tmp
-
 
 KAISER=0
 DIAMOND=0
@@ -497,84 +495,106 @@ echo 2 > /dbgfs/htc_battery/charger_state
 
 echo 1024 > /dbgfs/micropklt_dbg/sleep_leds
 
-if /bin/grep -c 'physkeyboard=fuze' /proc/cmdline >/dev/null ; then
+if [ $NEW_ROOT -eq 1 ]; then
+KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
+case "$KBD" in
+    fuse)
 	echo "USING RAPH110|FUZE LAYOUT"
 	cp -f /init.etc/keymaps/fuze_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/fuze_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/fuze_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=raph' /proc/cmdline >/dev/null ; then
+	;;
+    raph)
 	echo "USING NEW RAPH LAYOUT"
         cp -f /init.etc/keymaps/raphfix_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-elif /bin/grep -c 'physkeyboard=nordic_raph' /proc/cmdline >/dev/null ; then
+	;;
+    nordic_raph)
 	echo "USING NEW NORDIC RAPH LAYOUT"
         cp -f /init.etc/keymaps/raphfix_microp-keypad-swedish.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-elif /bin/grep -c 'physkeyboard=german_raph' /proc/cmdline >/dev/null ; then
+	;;
+    german_raph)
 	echo "USING NEW GERMAN RAPH LAYOUT"
         cp -f /init.etc/keymaps/microp-german.keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-elif /bin/grep -c 'physkeyboard=swiss_raph' /proc/cmdline >/dev/null ; then
+	;;
+    swiss_raph)
 	echo "USING NEW SWISS RAPH LAYOUT"
         cp -f /init.etc/keymaps/microp-swiss.keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-elif /bin/grep -c 'physkeyboard=tilt2' /proc/cmdline >/dev/null ; then
+	;;
+    tilt2)
 	echo "USING EXPERIMENTAL TILT2 LAYOUT"
         cp -f /init.etc/keymaps/tilt2_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/tilt2_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/tilt2_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod210' /proc/cmdline >/dev/null ; then
+	;;
+    rhod210)
 	echo "USING EXPERIMENTAL RHOD210 LAYOUT"
         cp -f /init.etc/keymaps/rhod210_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod210_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod210_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod100_de' /proc/cmdline >/dev/null ; then
+	;;
+    rhod100_de)
 	echo "USING RHOD100 DE LAYOUT"
         cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod100_de_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod100_fr' /proc/cmdline >/dev/null ; then
+	;;
+    rhod100_fr)
 	echo "USING RHOD100 FR LAYOUT"
         cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod100_fr_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod100_it' /proc/cmdline >/dev/null ; then
+	;;
+    rhod100_it)
 	echo "USING RHOD100 IT LAYOUT"
         cp -f /init.etc/keymaps/rhod100_it_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod100_it_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod100_it_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod100_uk' /proc/cmdline >/dev/null ; then
+	;;
+    rhod100_uk)
 	echo "USING RHOD100 UK LAYOUT"
         cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod100_uk_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod100_nordic' /proc/cmdline >/dev/null ; then
+	;;
+    rhod100_nordic)
 	echo "USING RHOD100 NORDIC LAYOUT"
         cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/rhod100_nordic_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-elif /bin/grep -c 'physkeyboard=rhod400' /proc/cmdline >/dev/null ; then
+	;;
+    rhod400)
         echo "USING EXPERIMENTAL RHOD400 LAYOUT"
         cp -f /init.etc/keymaps/rhod400_microp-keypad.kl /etc/keymaps/microp-keypad.kl
         cp -f /init.etc/keymaps/rhod400_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
         cp -f /init.etc/keymaps/rhod400_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
-elif /bin/grep -c 'physkeyboard=rhod500' /proc/cmdline >/dev/null ; then
+	;;
+    rhod500)
         echo "USING EXPERIMENTAL RHOD500 LAYOUT"
         cp -f /init.etc/keymaps/rhod500_microp-keypad.kl /etc/keymaps/microp-keypad.kl
         cp -f /init.etc/keymaps/rhod500_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
         cp -f /init.etc/keymaps/rhod500_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
-elif /bin/grep -c 'physkeyboard=kovsq' /proc/cmdline >/dev/null ; then
+	;;
+    kovsq)
 	echo "USING KOVSKY QWERTY LAYOUT"
 	cp -f /init.etc/keymaps/kovsky-qwerty.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/kovsky-qwerty.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-elif /bin/grep -c 'physkeyboard=kovsa' /proc/cmdline >/dev/null; then
+	;;
+    kovsa)
 	echo "USING KOVSKY AZERTY LAYOUT"
 	cp -f /init.etc/keymaps/kovsky-azerty.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/kovsky-azerty.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-else
+	;;
+    *)
         echo "USING OLD KEYMAP"
         cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
 	cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kl /etc/keymaps/microp-keypad.kl
 	cp -f /init.etc/keymaps/oldqwerty_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
-fi
+	;;
+esac
 
 cp -af /init.etc/keymaps/qwerty.kcm.bin /init.etc/keymaps/qwerty.kl /etc/keymaps/
+fi
+
 mount --bind /etc/keymaps /system/usr/keychars
 mount --bind /etc/keymaps /system/usr/keylayout
 
@@ -610,7 +630,6 @@ mkdir /dev/msm_camera
 mknod /dev/msm_camera/control0 c 250 0
 mknod /dev/msm_camera/config0 c 250 1
 mknod /dev/msm_camera/frame0 c 250 2
-#chmod a+s /bin/pppd
 
 # Generate a "serial number" for the Android system to identify the device.
 # Put it in /data so it survives reboots. Won't survive a factory reset, though.
