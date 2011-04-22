@@ -351,7 +351,7 @@ service netd /bin/netd
 
 service debuggerd /system/bin/debuggerd
 
-service ril-daemon /system/bin/rild -l /lib/froyo/libhtcgeneric-ril.so -- -d /dev/smd0
+service ril-daemon /system/bin/rild
     socket rild stream 660 root radio
     socket rild-debug stream 660 radio system
     user root
