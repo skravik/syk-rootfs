@@ -399,7 +399,7 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 		echo "Modules already unpacked for this kernel version -- skipping installation of $card/modules-$(uname -r).tar.gz"
 	fi
 
-	mount --bind /data/modules /lib/modules
+#	mount --bind /data/modules /lib/modules
 	mount --bind /data/modules /system/lib/modules
 
 	if [ -f /etc/wifi/wlan.ko ]; then
