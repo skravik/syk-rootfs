@@ -262,20 +262,6 @@ case "$HW" in
 	;;
 esac
 
-NEW_BPROP=0
-HWS=""
-if [ -f /data/build.prop ]; then
-	HWS=`grep ^#Hardware /data/build.prop | sed -e 's/^.* //'`
-fi
-if [ $NEW_SYSTEM -eq 1 -o $HW != "$HWS" ]; then
-	cp /system/build.prop /data/build.prop
-	NEW_BPROP=1
-	if [ $HW = VOGUE ]; then
-		sed -i s/^wifi/#wifi/ /data/build.prop
-	fi
-	echo "#Hardware $HW" >> /data/build.prop
-fi
-
 ### Fix su on some builds...
 mount --bind /bin/su /system/bin/su 2> /dev/null
 mount --bind /bin/su /system/xbin/su 2> /dev/null
@@ -424,18 +410,16 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 	depmod
 	fi
 
-	if [ $NEW_BPROP -eq 1 ]; then
-		sed -i s/^#wifi/wifi/ /data/build.prop
+	if [ "`grep -c ^wifi /etc/default.prop`" != "2" ]; then
+		echo "wifi.interface = wlan0" >> /etc/default.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /etc/default.prop
 	fi
 fi
 
-#if [ -f /system/eclair.build ]
-#then
-#	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
-#elif [ -f /system/froyo.build ]
-#then
-#	mount --bind /lib/froyo/libhardware_legacy.so /system/lib/libhardware_legacy.so
-#fi
+if [ -f /system/eclair.build ]
+then
+	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
+fi
 
 # fix PPP data device name
 if [ $NEW_ROOT -eq 1 ]; then
@@ -448,30 +432,17 @@ if [ $NEW_ROOT -eq 1 ]; then
 fi
 
 if [ "$WIFI_TI" = "1" ];then
-	if [ "`grep -c ^wifi /data/build.prop`" != "2" ]; then
-		echo "wifi.interface = tiwlan0" >> /data/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /data/build.prop
-	fi
+	ip link set dev tiwlan0 name wlan0
 fi
 
 if [ "$WIFI_BCM" = "1" ] ;then
-	if [ "`grep -c ^wifi /data/build.prop`" != "2" ]; then
-		echo "wifi.interface = eth0" >> /data/build.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /data/build.prop
-	fi
+	ip link set dev eth0 name wlan0
 
 	# fyi: firmware is loaded from /etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
 
-	mount --bind /etc/wifi/bcm432x/dhcpcd.conf /system/etc/dhcpcd/dhcpcd.conf
-	mount --bind /etc/wifi/bcm432x/wpa_supplicant.conf /system/etc/wifi/wpa_supplicant.conf
-
 	if [ $NEW_ROOT -eq 1 ]; then
 		# init.rc: fix wpa_supplicant service
-		sed -i s/-itiwlan0/-ieth0/ /etc/init.rc
 		sed -i s/-Dtiwlan0/-Dwext/ /etc/init.rc
-
-		# init.rc: fix dhcpcd service, wifi.interface, and wpa_supplicant service socket
-		sed -i s/tiwlan0/eth0/ /etc/init.rc
 
 		# init.rc:
 		sed -i s/user\ wifi/#user\ wifi/ /etc/init.rc
@@ -505,8 +476,6 @@ if [ "$WIFI_BCM" = "1" ] ;then
 
 	fi
 fi
-
-mount --bind /data/build.prop /system/build.prop
 
 if [ -f "$card/conf/$RCCONFIG.user.conf" ]; then
 	/bin/userinit.sh -c "$card/conf/$RCCONFIG.user.conf"
