@@ -14,6 +14,8 @@ PATH=/sbin:/system/sbin:/bin:/system/bin:/system/xbin:/system/xbin/bb:/data/loca
 /bin/mount -t proc proc /proc
 /bin/mount -t sysfs sys /sys
 
+echo 2048 > /sys/devices/virtual/bdi/179:0/read_ahead_kb
+
 /bin/mount | grep mtd
 notnand=$?
 
