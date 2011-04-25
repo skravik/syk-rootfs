@@ -472,9 +472,13 @@ if [ "$WIFI_BCM" = "1" ] ;then
 	fi
 fi
 
-if [ -f "$card/local.prop" -a "$card/local.prop" -nt /data/local.prop ]; then
-	cp "$card/local.prop" /data/local.prop
-fi
+for i in local.prop eri.xml; do
+	if [ -f "$card/$i" ]; then
+		if [ ! -f /data/$i -o "$card/$i" -nt /data/$i ]; then
+			cp "$card/$i" /data/$i
+		fi
+	fi
+done
 
 if [ -f "$card/conf/$RCCONFIG.user.conf" ]; then
 	/bin/userinit.sh -c "$card/conf/$RCCONFIG.user.conf"
