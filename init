@@ -152,9 +152,6 @@ NEW_ROOT=0
 
 if [ ! -d /data/etc ]; then
 	/bin/mkdir -m 0755 /data/etc
-	/bin/mkdir -p -m 0700 /data/mnt/secure
-	mkdir -m 0770 /data/shared_prefs
-	chown 1000:1000 /data/shared_prefs
 	NEW_SYSTEM=1
 	NEW_ROOT=1
 else
@@ -168,9 +165,6 @@ else
 	fi
 fi
 
-mount --bind /data/mnt/secure /mnt/secure
-mount /data/shared_prefs /shared_prefs
-
 if [ $NEW_SYSTEM -eq 1 ]; then
 	cp -ar /system/etc/* /data/etc
 fi
@@ -178,18 +172,16 @@ if [ $NEW_ROOT -eq 1 ]; then
 	cp -ar /init.etc/* /data/etc
 fi
 
-mount /data/etc /etc
-
 LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
 
 if [ "$LCDDENSITY" != "" ] ; then
-	DENS2=`grep lcd_density /etc/default.prop | sed -e 's/.*=//'`
+	DENS2=`grep lcd_density /data/etc/default.prop | sed -e 's/.*=//'`
 	if [ "$LCDDENSITY" != "$DENS2" ]; then
 		echo Setting ro.sf.lcd_density=$LCDDENSITY
 		if [ -z "$DENS2" ]; then
-			echo "ro.sf.lcd_density=$LCDDENSITY" >> /etc/default.prop
+			echo "ro.sf.lcd_density=$LCDDENSITY" >> /data/etc/default.prop
 		else
-			sed -i /lcd_density/s/=.*/=$LCDDENSITY/ /etc/default.prop
+			sed -i /lcd_density/s/=.*/=$LCDDENSITY/ /data/etc/default.prop
 		fi
 	fi
 fi
@@ -296,7 +288,7 @@ elif [ -f /system/froyo.build ] ; then
 
 	# vold: Fix sdcard device location for CDMA boards (thanks paalsteek)
 	if [ $NEW_SYSTEM -eq 1 -a -d /sys/devices/platform/msm_sdcc.3 ]; then
-		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
+		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /data/etc/vold.fstab
 	fi
 
 elif [ -f /system/gingerbread.build ] ; then
@@ -306,7 +298,7 @@ elif [ -f /system/gingerbread.build ] ; then
 
 	# vold: Fix sdcard device location for CDMA boards (thanks paalsteek)
 	if [ $NEW_SYSTEM -eq 1 -a -d /sys/devices/platform/msm_sdcc.3 ]; then
-		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /etc/vold.fstab
+		/bin/sed -i -e 's:/devices/platform/msm_sdcc\.2:/devices/platform/msm_sdcc.3:g' /data/etc/vold.fstab
 	fi
 
 elif [ -f /system/tattoo.build ] ; then
@@ -365,13 +357,13 @@ if [ $KAISER -eq 1 ] ; then
 fi
 
 if [ $NEW_ROOT -eq 1 -a $XPERIA -eq 1 ] ; then
-	echo "ro.sf.hwrotation=180" >> /etc/default.prop
+	echo "ro.sf.hwrotation=180" >> /data/etc/default.prop
 fi
 echo "using /init.$RCSCRIPT.rc as init.rc"
 echo "using $card/conf/$RCCONFIG.user.conf"
 
 if [ $NEW_ROOT -eq 1 ]; then
-	cp "/init.cfg/init.$RCSCRIPT.rc" /etc/init.rc
+	cp "/init.cfg/init.$RCSCRIPT.rc" /data/etc/init.rc
 fi
 
 #Assume this rootfs.img will be used only on "good" devices
@@ -404,15 +396,15 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 #	mount --bind /data/modules /lib/modules
 	mount --bind /data/modules /system/lib/modules
 
-	if [ -f /etc/wifi/wlan.ko ]; then
-	cp -R /etc/wifi/* /data/modules/
-	rm /etc/wifi/wlan.ko
+	if [ -f /data/etc/wifi/wlan.ko ]; then
+	cp -R /data/etc/wifi/* /data/modules/
+	rm /data/etc/wifi/wlan.ko
 	depmod
 	fi
 
-	if [ "`grep -c ^wifi /etc/default.prop`" != "2" ]; then
-		echo "wifi.interface = wlan0" >> /etc/default.prop
-		echo "wifi.supplicant_scan_interval = 45" >> /etc/default.prop
+	if [ "`grep -c ^wifi /data/etc/default.prop`" != "2" ]; then
+		echo "wifi.interface = wlan0" >> /data/etc/default.prop
+		echo "wifi.supplicant_scan_interval = 45" >> /data/etc/default.prop
 	fi
 fi
 
@@ -428,20 +420,20 @@ if [ $NEW_ROOT -eq 1 ]; then
 	else
 		PPPDEV=/dev/smd1
 	fi
-	sed -i s,PPPDEV,$PPPDEV, /etc/init.rc
+	sed -i s,PPPDEV,$PPPDEV, /data/etc/init.rc
 fi
 
 
 if [ "$WIFI_BCM" = "1" ] ;then
-	# fyi: firmware is loaded from /etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
+	# fyi: firmware is loaded from /data/etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
 
 	if [ $NEW_ROOT -eq 1 ]; then
 		# init.rc: fix wpa_supplicant service
-		sed -i s/-Dtiwlan0/-Dwext/ /etc/init.rc
+		sed -i s/-Dtiwlan0/-Dwext/ /data/etc/init.rc
 
 		# init.rc:
-		sed -i s/user\ wifi/#user\ wifi/ /etc/init.rc
-		sed -i s/group\ wifi/#group\ wifi/ /etc/init.rc
+		sed -i s/user\ wifi/#user\ wifi/ /data/etc/init.rc
+		sed -i s/group\ wifi/#group\ wifi/ /data/etc/init.rc
 	fi
 
 	# extract nvram (todo: clean this up/integrate with TI calibration)
@@ -501,103 +493,107 @@ KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
 case "$KBD" in
     fuse)
 	echo "USING RAPH110|FUZE LAYOUT"
-	cp -f /init.etc/keymaps/fuze_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/fuze_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/fuze_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+	cp -f /init.etc/keymaps/fuze_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/fuze_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/fuze_raph_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     raph)
 	echo "USING NEW RAPH LAYOUT"
-        cp -f /init.etc/keymaps/raphfix_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/raphfix_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
 	;;
     nordic_raph)
 	echo "USING NEW NORDIC RAPH LAYOUT"
-        cp -f /init.etc/keymaps/raphfix_microp-keypad-swedish.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/raphfix_microp-keypad-swedish.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
 	;;
     german_raph)
 	echo "USING NEW GERMAN RAPH LAYOUT"
-        cp -f /init.etc/keymaps/microp-german.keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/microp-german.keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
 	;;
     swiss_raph)
 	echo "USING NEW SWISS RAPH LAYOUT"
-        cp -f /init.etc/keymaps/microp-swiss.keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/microp-swiss.keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
 	;;
     tilt2)
 	echo "USING EXPERIMENTAL TILT2 LAYOUT"
-        cp -f /init.etc/keymaps/tilt2_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/tilt2_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/tilt2_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/tilt2_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/tilt2_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/tilt2_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod210)
 	echo "USING EXPERIMENTAL RHOD210 LAYOUT"
-        cp -f /init.etc/keymaps/rhod210_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/rhod210_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/rhod210_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/rhod210_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod210_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod210_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod100_de)
 	echo "USING RHOD100 DE LAYOUT"
-        cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/rhod100_de_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_de_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_de_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod100_fr)
 	echo "USING RHOD100 FR LAYOUT"
-        cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/rhod100_fr_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_fr_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_fr_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod100_it)
 	echo "USING RHOD100 IT LAYOUT"
-        cp -f /init.etc/keymaps/rhod100_it_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/rhod100_it_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/rhod100_it_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/rhod100_it_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_it_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_it_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod100_uk)
 	echo "USING RHOD100 UK LAYOUT"
-        cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/rhod100_uk_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_uk_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_uk_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod100_nordic)
 	echo "USING RHOD100 NORDIC LAYOUT"
-        cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/rhod100_nordic_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/rhod100_nordic_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/rhod100_nordic_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
     rhod400)
         echo "USING EXPERIMENTAL RHOD400 LAYOUT"
-        cp -f /init.etc/keymaps/rhod400_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-        cp -f /init.etc/keymaps/rhod400_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-        cp -f /init.etc/keymaps/rhod400_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
+        cp -f /init.etc/keymaps/rhod400_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+        cp -f /init.etc/keymaps/rhod400_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/rhod400_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl #does not exist, just following example
 	;;
     rhod500)
         echo "USING EXPERIMENTAL RHOD500 LAYOUT"
-        cp -f /init.etc/keymaps/rhod500_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-        cp -f /init.etc/keymaps/rhod500_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-        cp -f /init.etc/keymaps/rhod500_navi_pad.kl /etc/keymaps/raph_navi_pad.kl #does not exist, just following example
+        cp -f /init.etc/keymaps/rhod500_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+        cp -f /init.etc/keymaps/rhod500_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+        cp -f /init.etc/keymaps/rhod500_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl #does not exist, just following example
 	;;
     kovsq)
 	echo "USING KOVSKY QWERTY LAYOUT"
-	cp -f /init.etc/keymaps/kovsky-qwerty.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/kovsky-qwerty.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/kovsky-qwerty.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/kovsky-qwerty.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
 	;;
     kovsa)
 	echo "USING KOVSKY AZERTY LAYOUT"
-	cp -f /init.etc/keymaps/kovsky-azerty.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/kovsky-azerty.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/kovsky-azerty.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/kovsky-azerty.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
 	;;
     *)
         echo "USING OLD KEYMAP"
-        cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /etc/keymaps/microp-keypad.kcm.bin
-	cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kl /etc/keymaps/microp-keypad.kl
-	cp -f /init.etc/keymaps/oldqwerty_raph_navi_pad.kl /etc/keymaps/raph_navi_pad.kl
+        cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kcm.bin /data/etc/keymaps/microp-keypad.kcm.bin
+	cp -f /init.etc/keymaps/oldqwerty_microp-keypad.kl /data/etc/keymaps/microp-keypad.kl
+	cp -f /init.etc/keymaps/oldqwerty_raph_navi_pad.kl /data/etc/keymaps/raph_navi_pad.kl
 	;;
 esac
 
-cp -af /init.etc/keymaps/qwerty.kcm.bin /init.etc/keymaps/qwerty.kl /etc/keymaps/
+cp -af /init.etc/keymaps/qwerty.kcm.bin /init.etc/keymaps/qwerty.kl /data/etc/keymaps/
 fi
 
-mount --bind /etc/keymaps /system/usr/keychars
-mount --bind /etc/keymaps /system/usr/keylayout
+mount /data/etc /etc
+mount --bind /data/etc/keymaps /system/usr/keychars
+mount --bind /data/etc/keymaps /system/usr/keylayout
+mount -o remount,ro /etc
+mount -o remount,ro /system/usr/keychars
+mount -o remount,ro /system/usr/keylayout
 
 for i in /sys/class/input/input* ; do
         if [ "`cat $i/name`" = "tssc-manager" ] ; then
