@@ -33,6 +33,7 @@ cd "${TMPDIR}"/"${REPODIR}"
 ./scripts/gitclean.sh
 cp -a . "${TMPDIR}"/rootfs
 chmod u+s "${TMPDIR}"/rootfs/bin/su
+chmod 700 "${TMPDIR}"/rootfs/mnt/asec "${TMPDIR}"/rootfs/mnt/secure
 
 genext2fs --root "${TMPDIR}"/rootfs -U -N 1024 -m 1 -b 15360 "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img
 ln -sf "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img "${DESTDIR}"/rootfs.img
