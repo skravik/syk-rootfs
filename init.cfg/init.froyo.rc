@@ -465,7 +465,7 @@ service dhcpcd /system/bin/dhcpcd -ABKL
     disabled
     oneshot
 
-service pppd_gprs /system/bin/pppd PPPDEV defaultroute local usepeerdns \
+service pppd_gprs /system/bin/pppd /dev/smd1 defaultroute local usepeerdns \
     noipdefault unit 0 nodetach linkname gprs \
     lcp-restart 1 lcp-max-configure 3 ipcp-restart 1 ipcp-max-configure 3
     disabled

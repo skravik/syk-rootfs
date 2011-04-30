@@ -390,17 +390,6 @@ then
 	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
 fi
 
-# fix PPP data device name
-if [ $NEW_ROOT -eq 1 ]; then
-	if [ -c /dev/smd7 ]; then
-		PPPDEV=/dev/smd7
-	else
-		PPPDEV=/dev/smd1
-	fi
-	sed -i s,PPPDEV,$PPPDEV, /system/etc/init.rc
-fi
-
-
 if [ "$WIFI_BCM" = "1" ] ;then
 	# fyi: firmware is loaded from /data/etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
 
