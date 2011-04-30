@@ -392,7 +392,7 @@ fi
 
 # fix PPP data device name
 if [ $NEW_ROOT -eq 1 ]; then
-	if [ -f /dev/smd7 ]; then
+	if [ -c /dev/smd7 ]; then
 		PPPDEV=/dev/smd7
 	else
 		PPPDEV=/dev/smd1
