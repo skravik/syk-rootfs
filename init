@@ -110,7 +110,8 @@ then
 	RECOVERYCARD=$(echo $card | sed -e 's:/sdcard/:SDCARD\::')
 
 	echo "STARTING OTA UPDATE SYSTEM"
-	cp /init.cfg/init.recovery.rc /etc/init.rc
+	rm -f /init.rc
+	ln -s /init.cfg/init.recovery.rc /init.rc
 	mkdir /cache/recovery
 	echo "--update_package=${RECOVERYCARD}/update.zip" >/cache/recovery/command
 	echo "--send_intent=complete" >>/cache/recovery/command
@@ -298,7 +299,7 @@ elif [ -f /system/cyanogen.build ] ; then
 
 elif [ -f /system/custom.build ] ; then
 	echo "Custom init.rc detected"
-	cp /system/sysinit.rc /build.cfg/init.sysinit.rc
+	cp /system/sysinit.rc /init.cfg/init.sysinit.rc
 	RCCONFIG="hero"
 	RCSCRIPT="sysinit"
 	
@@ -342,11 +343,14 @@ if [ $XPERIA -eq 1 ] ; then
 		fi
 	fi
 fi
+
 echo "using $card/conf/$RCCONFIG.user.conf"
 
-if [ $NEW_ROOT -eq 1 ]; then
+INITRC=`ls -l /init.rc | grep "$RCSCRIPT"`
+if [ -z "$INITRC" ]; then
 	echo "using /init.$RCSCRIPT.rc as init.rc"
-	cp "/init.cfg/init.$RCSCRIPT.rc" /system/etc/init.rc
+	rm -f /init.rc
+	ln -s "/init.cfg/init.$RCSCRIPT.rc" /init.rc
 fi
 
 #Assume this rootfs.img will be used only on "good" devices
