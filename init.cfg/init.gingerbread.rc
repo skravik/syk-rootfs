@@ -116,13 +116,8 @@ loglevel 3
     # XDAndroid permissions
     chmod 0777 /dev/smd0
     chmod 0777 /dev/smd1
+    chmod 0777 /dev/smd7
     chmod 0777 /dev/smd27
-    chown radio radio /etc/ppp/pap-secrets
-    chown radio radio /etc/ppp/chap-secrets
-    chown root radio /etc/ppp/options.smd1
-    chmod 0600 /etc/ppp/pap-secrets
-    chmod 0600 /etc/ppp/chap-secrets
-    chmod 0775 /etc/ppp/options.smd1
     chmod 0777 /dev/vfe
     chmod 0777 /dev/camera
     chmod 0777 /dev/vogue_gps
@@ -468,5 +463,11 @@ service wpa_supplicant /system/bin/wpa_supplicant \
     oneshot
 
 service dhcpcd /system/bin/dhcpcd -ABKL
+    disabled
+    oneshot
+
+service pppd_gprs /system/bin/pppd PPPDEV defaultroute local usepeerdns \
+    noipdefault unit 0 nodetach linkname gprs \
+    lcp-restart 1 lcp-max-configure 3 ipcp-restart 1 ipcp-max-configure 3
     disabled
     oneshot
