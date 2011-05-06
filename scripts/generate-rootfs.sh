@@ -7,7 +7,7 @@ DESTDIR=~/rootfs-output
 TMPDIR=~/.tmp
 
 # source git repository to clone
-REPO="git://gitorious.org/xdandroid-eclair/eclair-rootfs.git"
+REPO=${REPO:-git://gitorious.org/xdandroid/rootfs.git}
 
 # optional, branch to switch to after cloning
 #BRANCH="fuze-navipad-remap"
@@ -16,8 +16,9 @@ REPO="git://gitorious.org/xdandroid-eclair/eclair-rootfs.git"
 [ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}"
 cd "${TMPDIR}"
 
-REPODIR=${REPO##*/}
-REPODIR=${REPODIR%.*}
+#REPODIR=${REPO##*/}
+#REPODIR=${REPODIR%.*}
+REPODIR=repodir
 git clone "${REPO}" "${REPODIR}"
 cd "${TMPDIR}"/"${REPODIR}"
 [ -z ${BRANCH} ] || git checkout "${BRANCH}"
@@ -32,6 +33,7 @@ cd "${TMPDIR}"/"${REPODIR}"
 ./scripts/gitclean.sh
 cp -a . "${TMPDIR}"/rootfs
 chmod u+s "${TMPDIR}"/rootfs/bin/su
+chmod 700 "${TMPDIR}"/rootfs/mnt/asec "${TMPDIR}"/rootfs/mnt/secure
 
 genext2fs --root "${TMPDIR}"/rootfs -U -N 1024 -m 1 -b 15360 "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img
 ln -sf "${DESTDIR}"/rootfs-"${DATE}"-"${GITDESCRIBE}".img "${DESTDIR}"/rootfs.img
