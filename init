@@ -580,4 +580,7 @@ cp /proc/cmdline /tmp/cmdline
 sed -i -e "s:$: androidboot.serialno=${SERIALNO}:" /tmp/cmdline
 mount --bind /tmp/cmdline /proc/cmdline
 
+# Bind-mount /sdcard/.android_secure to /mnt/secure/asec for native Apps2SD
+mount --bind /sdcard/.android_secure /mnt/secure/asec
+
 exec /init.android
