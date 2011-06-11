@@ -136,16 +136,7 @@ if [ ! -d $card/media ] ; then
         echo You have no media folder, please extract the resources to your SD card android folder
 fi
 
-CHK_ROOT=etc/wifi/Fw1251r1c.bin
-if [ ! -f /system/$CHK_ROOT -o /init.$CHK_ROOT -nt /system/$CHK_ROOT ]; then
-	NEW_ROOT=1
-else
-	NEW_ROOT=0
-fi
-
-if [ $NEW_ROOT -eq 1 ]; then
-	cp -ar /init.etc/* /system/etc
-fi
+cp -ar /init.etc/* /system/etc
 
 LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
 
@@ -449,7 +440,6 @@ echo 2 > /dbgfs/htc_battery/charger_state
 
 echo 1024 > /dbgfs/micropklt_dbg/sleep_leds
 
-if [ $NEW_ROOT -eq 1 ]; then
 KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
 case "$KBD" in
     fuse)
@@ -545,8 +535,6 @@ case "$KBD" in
 	cp -f /init.etc/keymaps/oldqwerty_raph_navi_pad.kl /system/usr/keylayout/gpio-keys.kl
 	;;
 esac
-
-fi
 
 mount -o remount,ro /system
 
