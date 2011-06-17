@@ -441,8 +441,7 @@ service dumpstate /system/bin/dumpstate -s
     disabled
     oneshot
 
-service hciattach /system/bin/hciattach \
-    -n -s 115200 /dev/ttyHS1 texas 115200 flow
+service hciattach /bin/hciattach
     user bluetooth
     group bluetooth net_bt_admin
     disabled
