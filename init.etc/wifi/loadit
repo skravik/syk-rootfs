@@ -25,3 +25,4 @@ if cat /proc/cpuinfo|grep -q Kovsky ; then
 	CALIBRATION=/proc/calibration #seems no calibration is better than a calibration here
 fi
 /etc/wifi/wlan_loader -f /etc/wifi/Fw1251r1c.bin -e $CALIBRATION -i $CONFIG
+/bin/ip link set dev tiwlan0 name wlan0
