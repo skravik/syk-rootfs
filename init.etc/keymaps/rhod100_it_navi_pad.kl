@@ -9,7 +9,7 @@
 # Very few buttons on the Tilt 2 are handled by the gpio driver.
 
 key 116   POWER             WAKE
-key 107   ENDCALL           WAKE_DROPPED
+key 107   HOME           WAKE_DROPPED
 key 114   VOLUME_DOWN
 key 115   VOLUME_UP
 
