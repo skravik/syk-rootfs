@@ -220,10 +220,6 @@ case "$HW" in
 	;;
 esac
 
-### Fix su on some builds...
-mount --bind /bin/su /system/bin/su 2> /dev/null
-mount --bind /bin/su /system/xbin/su 2> /dev/null
-
 RCSCRIPT=""
 RCCONFIG=""
 
