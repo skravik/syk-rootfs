@@ -489,10 +489,10 @@ cp /proc/cmdline /tmp/cmdline
 sed -i -e "s:$: androidboot.serialno=${SERIALNO}:" /tmp/cmdline
 mount --bind /tmp/cmdline /proc/cmdline
 
-# Transition sequence for FRX06->FRX07 (tiwlan0 renamed)
+# Transition sequence for FRX06->FRX07 (eth0/tiwlan0 renamed)
 if [ -f "/data/misc/wifi/wpa_supplicant.conf" ]
 then
-	sed -i -e 's:=tiwlan0:=wlan0:' /data/misc/wifi/wpa_supplicant.conf
+	sed -i -e 's:=\(tiwlan0\|eth0\):=wlan0:' /data/misc/wifi/wpa_supplicant.conf
 	chown 1000:1010 /data/misc/wifi/wpa_supplicant.conf
 fi
 
