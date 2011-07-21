@@ -497,6 +497,7 @@ then
 fi
 
 # Bind-mount /sdcard/.android_secure to /mnt/secure/asec for native Apps2SD
+[ -d /sdcard/.android_secure ] || mkdir /sdcard/.android_secure
 mount --bind /sdcard/.android_secure /mnt/secure/asec
 
 exec /init.android
