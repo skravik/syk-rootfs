@@ -199,6 +199,7 @@ case "$HW" in
 	DIAMOND=1
 	WIFI_TI=1
 	WVGA=1
+	KBD=topa
 	;;
     *Kovsky*)
 	echo "XPERIA detected"
@@ -436,7 +437,7 @@ echo 2 > /dbgfs/htc_battery/charger_state
 
 echo 1024 > /dbgfs/micropklt_dbg/sleep_leds
 
-KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
+[ -z $KBD ] && KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
 cp /init.etc/keymaps/default/*.kl /system/usr/keylayout/
 cp /init.etc/keymaps/default/*.kcm* /system/usr/keychars/
 if [ -d "/init.etc/keymaps/$KBD" ]
