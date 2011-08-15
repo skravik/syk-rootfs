@@ -64,44 +64,49 @@ fi
 
 
 if [ $notnand = "1" ] ; then
-    
-    if [ -f $card/data.gz ] ; then
-            echo "Please wait... extracting Data Image"
-            if [ -f $card/data.img ] ; then
-                    rm $card/data.img
-            fi
-            gzip -df $card/data.gz
-            [ $? -eq 0 ] || fail "Failed to extract Data Image"
-            mv $card/data $card/data.img
-            echo "done"
-    fi
-    
     if [ -d /sys/block/mmcblk0/mmcblk0p4 ] && /bin/grep -q -v no_partitions /proc/cmdline ; then
 	    echo "Using partitioned system"
 	    /bin/e2fsck -y /dev/block/mmcblk0p3
 	    mount -t ext2 -o relatime /dev/block/mmcblk0p3 /system
 	    /bin/e2fsck -y /dev/block/mmcblk0p4
-	    mount -t ext2 -o relatime /dev/block/mmcblk0p4 /data
+	    mount -t auto -o relatime /dev/block/mmcblk0p4 /data
+	    [ $? -eq 0 ] || fail "Failed to mount /data (/dev/block/mmcblk0p4)"
     else
 	    echo "Using loopback filesystems"
-            if [ ! -f $card/data.img ] ; then
-                    echo "Creating a new Data store"
-                    dd if=/dev/zero of=$card/data.img bs=1048576 count=256
-                    [ $? -eq 0 ] || fail "Failed to allocate the storage"
-                    mke2fs -F $card/data.img
-                    [ $? -eq 0 ] || fail "Failed to format the storage"
-            fi
-
-            losetup /dev/block/loop0 $card/data.img
-            [ $? -eq 0 ] || fail "Failed to find data.img on SD Card"
-            e2fsck -y /dev/block/loop0
-            mount -t ext2 -o relatime /dev/block/loop0 /data
 
             losetup /dev/block/loop1 $card/system.ext2
-            [ $? -eq 0 ] || fail "Failed to reach system.ext2 on SD Card"
+            [ $? -eq 0 ] || fail "Failed to find system.ext2 on SD Card"
             e2fsck -y /dev/block/loop1
             mount -t ext2 -o relatime /dev/block/loop1 /system
-		    [ $? -eq 0 ] || fail "Failed to mount /system"
+	    [ $? -eq 0 ] || fail "Failed to mount /system"
+
+	    dataimg=data.img
+	    mkfs="-t ext2"
+	    if /bin/grep -q ext4dev /proc/cmdline ; then
+		dataimg=data.ext4
+		mkfs="-t ext4 -E test_fs -O ^huge_file"
+	    fi
+
+	    if [ -f $card/data.gz ] ; then
+		echo "Please wait... extracting $dataimg"
+		gzip -cdf $card/data.gz > $card/$dataimg
+		[ $? -eq 0 ] || fail "Failed to extract $dataimg"
+		rm $card/data.gz
+	    elif [ ! -f $card/$dataimg ] ; then
+                    echo "Creating a new $dataimg"
+                    dd if=/dev/zero of=$card/$dataimg bs=1048576 count=256
+                    [ $? -eq 0 ] || fail "Failed to allocate $dataimg"
+		    mkdir -p /etc/ ; touch /etc/mtab
+                    mke2fs $mkfs -F $card/$dataimg
+                    [ $? -eq 0 ] || fail "Failed to format $dataimg"
+            fi
+
+            losetup /dev/block/loop0 $card/$dataimg
+            [ $? -eq 0 ] || fail "Failed to find $dataimg on SD Card"
+            e2fsck -y /dev/block/loop0
+            mount -t auto -o relatime /dev/block/loop0 /data
+	    [ $? -eq 0 ] || fail "Failed to mount /data ($card/$datamimg)"
+
     fi
 fi
 
@@ -130,10 +135,6 @@ if [ -d $card/AndroidApps ] ; then
         fi
 	(cd $card/AndroidApps; for i in *; do if [ ! -f "/data/app/$i" -o "$i" -nt "/data/app/$i" ]; then \
 		cp "$i" /data/app; fi done)
-fi
-
-if [ ! -d $card/media ] ; then
-        echo You have no media folder, please extract the resources to your SD card android folder
 fi
 
 cp -ar /init.etc/* /system/etc
