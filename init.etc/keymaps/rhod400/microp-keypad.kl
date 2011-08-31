@@ -78,7 +78,7 @@ key 108   DPAD_LEFT
 key 106   DPAD_DOWN
 
 # These 'hardware' buttons are actually handled by the microp-keypad driver
-key 139   MENU              WAKE_DROPPED
-key 158   BACK              WAKE_DROPPED
-key 231   CALL              WAKE_DROPPED
+key 139   MENU
+key 158   BACK
+key 231   CALL
 key 102   REAR_MUTE
