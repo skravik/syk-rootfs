@@ -302,7 +302,9 @@ on boot
     chmod 666 /dev/msm_pcm_ctl
     chmod 666 /dev/msm_hw3dm
     chmod 666 /dev/msm_hw3dc
+    # first entry is legacy variant and can be dropped later
     chmod 666 /dev/htc-acoustic_wince
+    chmod 666 /dev/htc_acoustic_wince
     chmod 666 /dev/tpa2016d2
 
 # Define TCP buffer sizes for various networks
