@@ -313,7 +313,7 @@ COMPCACHE()
 
 #		if [ ${CC_NEW_DECT} -eq 0 ]; then
 
-			mknod -m 0666 /dev/block/ramzswap0 b 254 0
+			mknod /dev/block/ramzswap0 b 253 0
 			[ $? -eq 0 ] || fail "Failed to create the block device"
 
 			insmod /lib/modules/lzo_compress.ko
