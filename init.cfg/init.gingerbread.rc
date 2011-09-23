@@ -308,6 +308,7 @@ on boot
     chmod 666 /dev/htc_acoustic_wince
     chmod 666 /dev/tpa2016d2
     chmod 666 /dev/audience_A1010
+    chmod 666 /dev/cm3602
 
 # Define TCP buffer sizes for various networks
 #   ReadMin, ReadInitial, ReadMax, WriteMin, WriteInitial, WriteMax,
