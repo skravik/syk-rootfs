@@ -436,8 +436,6 @@ echo 40 >/sys/devices/system/cpu/cpu0/cpufreq/ondemand/up_threshold
 #Activate full charging
 echo 2 > /dbgfs/htc_battery/charger_state
 
-echo 1024 > /dbgfs/micropklt_dbg/sleep_leds
-
 [ -z $KBD ] && KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
 cp /init.etc/keymaps/default/*.kl /system/usr/keylayout/
 cp /init.etc/keymaps/default/*.kcm* /system/usr/keychars/
