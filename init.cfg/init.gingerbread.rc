@@ -287,6 +287,18 @@ on boot
     chmod 666 /dev/input/event4
     chmod 666 /dev/input/event5
     chmod 666 /dev/input/event6
+    chmod 666 /sys/devices/virtual/input/input1/mode
+    chmod 666 /sys/devices/virtual/input/input1/delay
+    chmod 666 /sys/devices/virtual/input/input2/mode
+    chmod 666 /sys/devices/virtual/input/input2/delay
+    chmod 666 /sys/devices/virtual/input/input3/mode
+    chmod 666 /sys/devices/virtual/input/input3/delay
+    chmod 666 /sys/devices/virtual/input/input4/mode
+    chmod 666 /sys/devices/virtual/input/input4/delay
+    chmod 666 /sys/devices/virtual/input/input5/mode
+    chmod 666 /sys/devices/virtual/input/input5/delay
+    chmod 666 /sys/devices/virtual/input/input6/mode
+    chmod 666 /sys/devices/virtual/input/input6/delay
     chmod 666 /sys/class/i2c-adapter/i2c-0/0-0018/enable
     chmod 666 /sys/class/i2c-adapter/i2c-0/0-0019/enable
     chmod 666 /sys/class/i2c-adapter/i2c-0/0-0018/rate
