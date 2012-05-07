@@ -1,0 +1,35 @@
+M0,disable AGC,01 (Function control), 02 (Attack time) , 03 (Release time) ,04 (Hold time),05 (Fix gain),06 Noise gate/ Limiter),07 (Max/ Comp ratio)
+N0,Vol0,C2,20,1,0,10,19,C0
+N1,Vol1,C2,20,1,0,10,19,C0
+N2,Vol2,C2,20,1,0,10,19,C0
+N3,Vol3,C2,20,1,0,10,19,C0
+N4,Vol4,C2,20,1,0,10,19,C0
+N5,Vol5,C2,20,1,0,10,19,C0
+M1,enable AGC video file,01 (Function control), 02 (Attack time) , 03 (Release time) ,04 (Hold time),05 (Fix gain),06 Noise gate/ Limiter),07 (Max/ Comp ratio)
+N0,Vol0,C2,20,1,0,10,19,C0
+N1,Vol1,C2,20,1,0,10,19,C0
+N2,Vol2,C2,20,1,0,10,19,C0
+N3,Vol3,C2,20,1,0,10,19,C0
+N4,Vol4,C2,20,1,0,10,19,C0
+N5,Vol5,C2,20,1,0,10,19,C0
+M2,enable AGC youtube.exe,01 (Function control), 02 (Attack time) , 03 (Release time) ,04 (Hold time),05 (Fix gain),06 Noise gate/ Limiter),07 (Max/ Comp ratio)
+N0,Vol0,C2,20,1,0,10,19,C0
+N1,Vol1,C2,20,1,0,10,19,C0
+N2,Vol2,C2,20,1,0,10,19,C0
+N3,Vol3,C2,20,1,0,10,19,C0
+N4,Vol4,C2,20,1,0,10,19,C0
+N5,Vol5,C2,20,1,0,10,19,C0
+M4,enable AGC voice call,01 (Function control), 02 (Attack time) , 03 (Release time) ,04 (Hold time),05 (Fix gain),06 Noise gate/ Limiter),07 (Max/ Comp ratio)
+N0,Vol0,C3,3F,1,0,14,7A,C0
+N1,Vol1,C3,3F,1,0,14,7A,C0
+N2,Vol2,C3,3F,1,0,14,7A,C0
+N3,Vol3,C3,3F,1,0,14,7A,C0
+N4,Vol4,C3,3F,1,0,14,7A,C0
+N5,Vol5,C3,3F,1,0,14,7A,C0
+M5,enable AGC ringtone,01 (Function control), 02 (Attack time) , 03 (Release time) ,04 (Hold time),05 (Fix gain),06 Noise gate/ Limiter),07 (Max/ Comp ratio)
+N0,Vol0,C2,20,1,0,10,19,C0
+N1,Vol1,C2,20,1,0,10,19,C0
+N2,Vol2,C2,20,1,0,10,19,C0
+N3,Vol3,C2,20,1,0,10,19,C0
+N4,Vol4,C2,20,1,0,10,19,C0
+N5,Vol5,C2,20,1,0,10,19,C0
