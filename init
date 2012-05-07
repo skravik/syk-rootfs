@@ -19,121 +19,13 @@ echo 7 > /proc/sys/vm/laptop_mode
 echo 90 > /proc/sys/vm/dirty_ratio
 echo 60000 > /proc/sys/vm/dirty_expire_centisecs
 echo 60000 > /proc/sys/vm/dirty_writeback_centisecs
-
+MAKEDEVS
 notnand=0
 
 if [ $notnand = "0" ] ; then
   echo "running from NAND"
   /bin/mount -t yaffs2 /dev/block/mtdblock3 /system
   /bin/mount -t yaffs2 /dev/block/mtdblock4 /data
-fi
-
-partition=mmcblk0p1
-
-# Try unpartitioned card
-if [ ! -d /sys/block/mmcblk0/$partition ] ; then
-	partition=mmcblk0
-fi
-
-if [ -f /sys/class/vogue_hw/gsmphone ] ; then
-	echo "GSM phone found"
-fi
-
-#mkdir -m 0777 /sdcard
-#fsck already done in initrd
-mount -t vfat -o fmask=0000,dmask=0000,rw,flush,relatime,utf8 /dev/block/$partition /sdcard
-[ $? -eq 0 ] || fail "Failed to mount the SD card. Cannot continue."
-
-if [ ! -d /sdcard/cache ] ; then
-	mkdir /sdcard/cache
-fi
-
-#mkdir -m 0777 /cache
-mount /sdcard/cache /cache
-
-CARD_PATH=`/bin/grep -o "rel_path=.*" /proc/cmdline | /bin/sed -e "s/.*rel_path=//g" -e "s/ .*//g"`
-if [ "$CARD_PATH" = "" ];then
-	CARD_PATH="andboot"
-fi;
-if [ -d /sdcard/$CARD_PATH ] ; then
-	card=/sdcard/$CARD_PATH
-else
-	card=/sdcard
-fi
-
-
-if [ $notnand = "1" ] ; then
-    if [ -d /sys/block/mmcblk0/mmcblk0p4 ] && /bin/grep -q -v no_partitions /proc/cmdline ; then
-	    echo "Using partitioned system"
-	    /bin/e2fsck -y /dev/block/mmcblk0p3
-	    mount -t ext2 -o relatime /dev/block/mmcblk0p3 /system
-	    /bin/e2fsck -y /dev/block/mmcblk0p4
-	    mount -t auto -o relatime /dev/block/mmcblk0p4 /data
-	    [ $? -eq 0 ] || fail "Failed to mount /data (/dev/block/mmcblk0p4)"
-    else
-	    echo "Using loopback filesystems"
-
-            losetup /dev/block/loop1 $card/system.ext2
-            [ $? -eq 0 ] || fail "Failed to find system.ext2 on SD Card"
-            e2fsck -y /dev/block/loop1
-            mount -t ext2 -o relatime /dev/block/loop1 /system
-	    [ $? -eq 0 ] || fail "Failed to mount /system"
-
-	    dataimg=data.img
-	    mkfs="-t ext2"
-	    if /bin/grep -q ext4dev /proc/cmdline ; then
-		dataimg=data.ext4
-		mkfs="-t ext4 -E test_fs -O ^huge_file"
-	    fi
-
-	    if [ -f $card/data.gz ] ; then
-		echo "Please wait... extracting $dataimg"
-		gzip -cdf $card/data.gz > $card/$dataimg
-		[ $? -eq 0 ] || fail "Failed to extract $dataimg"
-		rm $card/data.gz
-	    elif [ ! -f $card/$dataimg ] ; then
-                    echo "Creating a new $dataimg"
-                    dd if=/dev/zero of=$card/$dataimg bs=1048576 count=256
-                    [ $? -eq 0 ] || fail "Failed to allocate $dataimg"
-		    mkdir -p /etc/ ; touch /etc/mtab
-                    mke2fs $mkfs -F $card/$dataimg
-                    [ $? -eq 0 ] || fail "Failed to format $dataimg"
-            fi
-
-            losetup /dev/block/loop0 $card/$dataimg
-            [ $? -eq 0 ] || fail "Failed to find $dataimg on SD Card"
-            e2fsck -y /dev/block/loop0
-            mount -t auto -o relatime /dev/block/loop0 /data
-	    [ $? -eq 0 ] || fail "Failed to mount /data ($card/$datamimg)"
-
-    fi
-fi
-
-if [ -f "$card/update.zip" ] && [ ! -f "/sdcard/cache/recovery/intent" ] && [ -z "$SQUASH" ]
-then
-	RECOVERYCARD=$(echo $card | sed -e 's:/sdcard/:SDCARD\::')
-
-	echo "STARTING OTA UPDATE SYSTEM"
-	rm -f /init.rc
-	ln -s /init.cfg/init.recovery.rc /init.rc
-	mkdir /cache/recovery
-	echo "--update_package=${RECOVERYCARD}/update.zip" >/cache/recovery/command
-	echo "--send_intent=complete" >>/cache/recovery/command
-	exec /init.android
-fi
-
-# If not updating, ensure old recovery.intent and update.zip files are removed so we can update again later.
-rm -f /sdcard/cache/recovery/intent
-rm -f $card/update.zip
-
-if [ -d $card/AndroidApps ] ; then
-        echo Copying Applications
-        if [ ! -d /data/app ] ; then
-                mkdir -m 0771 /data/app
-		chown -R 1000:1000 /data/app
-        fi
-	(cd $card/AndroidApps; for i in *; do if [ ! -f "/data/app/$i" -o "$i" -nt "/data/app/$i" ]; then \
-		cp "$i" /data/app; fi done)
 fi
 
 cp -ar /init.etc/* /system/etc
@@ -152,162 +44,23 @@ if [ "$LCDDENSITY" != "" ] ; then
 	fi
 fi
 
-mount /sdcard/cache /tmp
-
 KAISER=0
 DIAMOND=0
 WIFI_TI=0
 WIFI_BCM=0
 XPERIA=0
 WVGA=0
-HW=`cat /proc/cpuinfo | grep Hardware`
-case "$HW" in
-    *Kaiser*)
-	echo "KAISER detected"
-	HW=KAISER
-	KAISER=1
-	WIFI_TI=1
-	;;
-    *Polaris*)
-	echo "POLARIS detected"
-	HW=POLARIS
-	KAISER=1
-	WIFI_TI=1
-	;;
-    *Diamond*)
-	echo "DIAMOND detected"
-	HW=DIAMOND
-	DIAMOND=1
-	WIFI_TI=1
-	;;
-    *Raphael*)
-	echo "RAPHAEL detected"
-	HW=RAPHAEL
-	DIAMOND=1
-	WIFI_TI=1
-	;;
-    *blackstone*)
-	echo "BLACKSTONE detected"
-	HW=BLACKSTONE
-	DIAMOND=1
-	WIFI_TI=1
-	WVGA=1
-	;;
-    *Topaz*)
-	echo "TOPAZ detected"
-	HW=TOPAZ
-	DIAMOND=1
-	WIFI_TI=1
-	WVGA=1
-	KBD=topa
-	;;
-    *Kovsky*)
-	echo "XPERIA detected"
-	HW=KOVSKY
-	XPERIA=1
-	WIFI_TI=1
-	WVGA=1
-	;;
-    *Rhodium*)
-	echo "RHODIUM detected"
-	HW=RHODIUM
-	DIAMOND=1
-	WIFI_BCM=1
-	WVGA=1
-	;;
-    *)
-	echo "VOGUE detected"
-	HW=VOGUE
-	;;
-esac
+HW=RHODIUM
+DIAMOND=1
+WIFI_BCM=1
+WVGA=1
 
 RCSCRIPT=""
 RCCONFIG=""
 
-echo "Checking for build type..."
-if [ -f /system/hero.build ] ; then
-	echo "Hero build detected"
-	RCSCRIPT="hero"
-	RCCONFIG="hero"
-	ln /data/app_s /system/app
-
-elif [ -f /system/eclairhero.build ] ; then
-	echo "HERO 2.1 BUILD DETECTED -- ECLAIR"
-	RCSCRIPT="eclairhero"
-	RCCONFIG="eclairhero"
-	mount --bind /lib/eclair/hw /system/lib/hw
-
-elif [ -f /system/eclair.build ] ; then
-	echo "Eclair build detected"
-	RCSCRIPT="eclair"
-	RCCONFIG="eclair"
-	mount --bind /lib/eclair/hw /system/lib/hw
-
-elif [ -f /system/froyo.build ] ; then
-	echo "Froyo build detected"
-	RCSCRIPT="froyo"
-	RCCONFIG="froyo"
-	mount --bind /lib/froyo/hw /system/lib/hw
-
-elif [ -f /system/gingerbread.build ] ; then
-	echo "Gingerbread build detected"
-	RCSCRIPT="gingerbread"
-	RCCONFIG="gingerbread"
-
-elif [ -f /system/tattoo.build ] ; then
-	echo "Tattoo build detected"
-	RCSCRIPT="tattoo"
-	RCCONFIG="tattoo"
-
-elif [ -f /system/donut.build ] ; then
-	echo "Donut build detected"
-	RCSCRIPT="donut"
-	RCCONFIG="donut"
-	mount --bind /lib/donut/hw /system/lib/hw
-
-elif [ -d /system/lib/donut ] ; then
-	echo "Donut build detected"
-	RCSCRIPT="donut"
-	RCCONFIG="donut"
-
-elif [ -f /system/xrom.build ] ; then
-	echo "xROM build detected"
-	RCSCRIPT="xrom"
-	RCCONFIG="xrom"
-
-elif [ -f /system/rogers.build ] ; then
-	echo "Rogers build detected"
-	RCSCRIPT="rogers"
-	RCCONFIG="rogers"
-
-elif [ -f /system/cyanogen.build ] ; then
-	echo "cyanogen experimental detected.....eating donuts"
-	RCSCRIPT="cyanogen"
-	RCCONFIG="cyanogen"
-
-elif [ -f /system/custom.build ] ; then
-	echo "Custom init.rc detected"
-	cp /system/sysinit.rc /init.cfg/init.sysinit.rc
-	RCCONFIG="hero"
-	RCSCRIPT="sysinit"
-	
-else
-	echo "Unknown Android build. Assuming Ion variant"
-	RCSCRIPT="ion"
-	RCCONFIG="ion"
-
-	# for the fake sensors library
-	mount /lib/hw /system/lib/hw -o loop
-	chmod 666 /dev/input/event0
-
-	if [ $DIAMOND -eq 1 ] ; then
-		RCCONFIG="ion.diamond"
-	fi
-fi
-
-if [ $KAISER -eq 1 ] ; then
-	RCSCRIPT="$RCSCRIPT.kaiser"
-fi
+echo "Gingerbread build detected"
+RCSCRIPT="gingerbread"
+RCCONFIG="gingerbread"
 
 if [ "$LCDDENSITY" != "" ] ; then
 	DENS2=`grep lcd_density /system/etc/default.prop | sed -e 's/.*=//'`
@@ -320,19 +73,8 @@ if [ "$LCDDENSITY" != "" ] ; then
 		fi
 	fi
 fi
-if [ $XPERIA -eq 1 ] ; then
-	ROT=`grep hwrotation /system/etc/default.prop | sed -e 's/.*=//'`
-	if [ "$ROT" != 180 ]; then
-		echo Setting ro.sf.hwrotation=180
-		if [ -z "$ROT" ]; then
-			echo "ro.sf.hwrotation=180" >> /system/etc/default.prop
-		else
-			sed -i /hwrotation/s/=.*/=180/ /system/etc/default.prop
-		fi
-	fi
-fi
 
-echo "using $card/conf/$RCCONFIG.user.conf"
+echo "using system/etc/$RCCONFIG.user.conf"
 
 INITRC=`ls -l /init.rc | grep "$RCSCRIPT"`
 if [ -z "$INITRC" ]; then
@@ -341,28 +83,13 @@ if [ -z "$INITRC" ]; then
 	ln -s "/init.cfg/init.$RCSCRIPT.rc" /init.rc
 fi
 
-#Assume this rootfs.img will be used only on "good" devices
-#Meaning raph/diam/blac/
-
-# echo /dev/block/mmcblk0p2 > /sys/devices/platform/usb_mass_storage/lun0/file
-ifconfig usb0 192.168.20.1 up
-busybox telnetd -b 192.168.20.1 -l /bin/sh
-#chmod 4755 /bin/su
-#mkdir -m 0777 /smodem
-mknod /dev/urandom c 1 9
-if [ -d /data/dropbear/ ] ; then
-	echo "Starting SSH"
-	mknod /dev/random c 1 8
-	/bin/dropbear -r /data/dropbear/dropbear_rsa_host_key -s
-fi
-
 if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
-	if [ -e "$card/modules-$(uname -r).tar.gz" ] && ! `strings /lib/modules/mac80211.ko 2>/dev/null | grep -q "vermagic=$(uname -r)"`; then
-		echo "Installing $card/modules-$(uname -r).tar.gz"
-		tar xzf $card/modules-$(uname -r).tar.gz -C /lib/modules
+	if [ -e "/system/lib/modules/modules-$(uname -r).tar.gz" ] && ! `strings /lib/modules/mac80211.ko 2>/dev/null | grep -q "vermagic=$(uname -r)"`; then
+		echo "Installing system/lib/modules/modules-$(uname -r).tar.gz"
+		tar xzf /system/lib/modules/modules-$(uname -r).tar.gz -C /lib/modules
 		ln -s /lib/modules /lib/modules/`uname -r`
 	else
-		echo "Modules already unpacked for this kernel version -- skipping installation of $card/modules-$(uname -r).tar.gz"
+		echo "Modules already unpacked for this kernel version -- skipping installation of system/lib/modules/modules-$(uname -r).tar.gz"
 	fi
 
 	if [ -f /system/etc/wifi/wlan.ko ]; then
@@ -377,10 +104,6 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 	fi
 fi
 
-if [ -f /system/eclair.build ]
-then
-	mount --bind /lib/eclair/libhardware_legacy.so /system/lib/libhardware_legacy.so
-fi
 
 if [ "$WIFI_BCM" = "1" ] ;then
 	# fyi: firmware is loaded from /data/etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
@@ -413,18 +136,10 @@ if [ "$WIFI_BCM" = "1" ] ;then
 	fi
 fi
 
-for i in local.prop eri.xml serialno; do
-	if [ -f "$card/$i" ]; then
-		if [ ! -f /data/$i -o "$card/$i" -nt /data/$i ]; then
-			cp "$card/$i" /data/$i
-		fi
-	fi
-done
-
-if [ -f "$card/conf/$RCCONFIG.user.conf" ]; then
-	/bin/userinit.sh -c "$card/conf/$RCCONFIG.user.conf"
+if [ -f /system/etc/gingerbread.user.conf ]; then
+	/bin/userinit.sh -c /system/etc/gingerbread.user.conf
 else
-	echo "No user config files ($RCCONFIG) found on sdcard"
+	echo "No user config files ($RCCONFIG) found in /system/etc"
 fi
 
 mount -tdebugfs none /dbgfs
@@ -435,17 +150,42 @@ echo 40 >/sys/devices/system/cpu/cpu0/cpufreq/ondemand/up_threshold
 #Activate full charging
 echo 2 > /dbgfs/htc_battery/charger_state
 
-[ -z $KBD ] && KBD=`sed 's/.*physkeyboard=\([0-9a-z_]*\).*/\1/' /proc/cmdline`
 cp /init.etc/keymaps/default/*.kl /system/usr/keylayout/
 cp /init.etc/keymaps/default/*.kcm* /system/usr/keychars/
-if [ -d "/init.etc/keymaps/$KBD" ]
-then
-	cp /init.etc/keymaps/"$KBD"/*.kl /system/usr/keylayout/
-	cp /init.etc/keymaps/"$KBD"/*.kcm* /system/usr/keychars/
-fi
+LAYOUT=`/bin/grep ".*0*" /sys/class/htc_hw/machine_variant`
+if [ $LAYOUT = "RHOD300" ] ; then
+	echo "USING EXPERIMENTAL TILT2 LAYOUT"
+	cp /init.etc/keymaps/rhod300/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/rhod300/*.kcm* /system/usr/keychars/
 
+elif [ $LAYOUT = "RHOD100" ] ; then
+	echo "USING EXPERIMENTAL RHOD100 LAYOUT (UK DEFAULT)"
+	cp /init.etc/keymaps/rhod100/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/rhod100/*.kcm* /system/usr/keychars/
+
+elif [ $LAYOUT = "RHOD210" ] ; then
+	echo "USING EXPERIMENTAL RHOD210 LAYOUT"
+	cp /init.etc/keymaps/rhod210/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/rhod210/*.kcm* /system/usr/keychars/
+
+elif [ $LAYOUT = "RHOD400" ] ; then
+	echo "USING EXPERIMENTAL RHOD400 LAYOUT"
+	cp /init.etc/keymaps/rhod400/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/rhod400/*.kcm* /system/usr/keychars/
+
+elif [ $LAYOUT = "RHOD500" ] ; then
+	echo "USING EXPERIMENTAL RHOD500 LAYOUT"
+	cp /init.etc/keymaps/rhod500/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/rhod500/*.kcm* /system/usr/keychars/
+else
+    echo "CAN'T DETERMINE RHODIUM VARIANT TYPE"
+	cat /sys/class/htc_hw/machine_variant
+fi
+chmod 666 /system/usr/keylayout/*.*
+chmod 666 /system/usr/keychars/*.*
 mount -o remount,ro /system
 
+## Ts Calibration
 for i in /sys/class/input/input* ; do
         if [ "`cat $i/name`" = "tssc-manager" ] ; then
                 touchscreendir=$i
@@ -453,25 +193,14 @@ for i in /sys/class/input/input* ; do
         fi
 done
 
-if [ -f $card/ts-calibration ] ; then
+if [ -f /data/ts-calibration ] ; then
         echo "Using Saved Touchscreen Calibration"
-	echo 128,128,1903,128,128,1907,1903,1907,1024,1024 > $touchscreendir/calibration_screen
-        cat $card/ts-calibration > $touchscreendir/calibration_points
+        echo 128,128,1903,128,128,1907,1903,1907,1024,1024 > $touchscreendir/calibration_screen
+        cat /data/ts-calibration > $touchscreendir/calibration_points
 else
-        mkdir /dev/graphics
-        mknod /dev/graphics/fb0 c 29 0
-        clear
-        echo; echo; echo; echo; echo; echo; echo; echo "Calibrating Touchscreen:"
-        echo "Click the Five Targets in order -- Top Left, Top Right, Middle, Bottom Left, Bottom Right"
-	echo "(Tap lightly. The screen is quite sensitive.)"
-        tssc-calibrate
-        echo 0,0,0,0,0,0,0,0,0,0 | cmp -s $touchscreendir/calibration_points # determine if calibration is still null -- means failed calibration
-        if [ $? -eq 0 ] ; then
-                echo "Touchscreen Calibration Failed"
-        else
-                echo "Touchscreen Calibration Successful; Saving..."
-                cat $touchscreendir/calibration_points > $card/ts-calibration
-        fi
+        echo "Using Default Calibration Values"
+	cat /sys/android_tp_cal/tp_cal > /data/ts-calibration
+        cat /data/ts-calibration > $touchscreendir/calibration_points
 fi
 
 mkdir /dev/msm_camera
@@ -494,9 +223,5 @@ then
 	sed -i -e 's:=\(tiwlan0\|eth0\):=wlan0:' /data/misc/wifi/wpa_supplicant.conf
 	chown 1000:1010 /data/misc/wifi/wpa_supplicant.conf
 fi
-
-# Bind-mount /sdcard/.android_secure to /mnt/secure/asec for native Apps2SD
-[ -d /sdcard/.android_secure ] || mkdir /sdcard/.android_secure
-mount --bind /sdcard/.android_secure /mnt/secure/asec
 
 exec /init.android
