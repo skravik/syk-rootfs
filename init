@@ -158,29 +158,50 @@ if [ $LAYOUT = "RHOD300" ] ; then
 	cp /init.etc/keymaps/rhod300/*.kl /system/usr/keylayout/
 	cp /init.etc/keymaps/rhod300/*.kcm* /system/usr/keychars/
 
+	cp -f /system/etc/audiofiles/gsm/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
+	cp -f /system/etc/audiofiles/gsm/AudioPara3_ATT.csv /system/etc/AudioPara3.csv
+	cp -f /system/etc/audiofiles/gsm/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
+
+
 elif [ $LAYOUT = "RHOD100" ] ; then
 	echo "USING EXPERIMENTAL RHOD100 LAYOUT (UK DEFAULT)"
 	cp /init.etc/keymaps/rhod100/*.kl /system/usr/keylayout/
 	cp /init.etc/keymaps/rhod100/*.kcm* /system/usr/keychars/
+	cp -f /system/etc/audiofiles/gsm/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
+	cp -f /system/etc/audiofiles/gsm/AudioPara3.csv /system/etc/AudioPara3.csv
+	cp -f /system/etc/audiofiles/gsm/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
 
 elif [ $LAYOUT = "RHOD210" ] ; then
 	echo "USING EXPERIMENTAL RHOD210 LAYOUT"
 	cp /init.etc/keymaps/rhod210/*.kl /system/usr/keylayout/
 	cp /init.etc/keymaps/rhod210/*.kcm* /system/usr/keychars/
+	cp -f /system/etc/audiofiles/gsm/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
+	cp -f /system/etc/audiofiles/gsm/AudioPara3_TMO.csv /system/etc/AudioPara3.csv
+	cp -f /system/etc/audiofiles/gsm/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
 
 elif [ $LAYOUT = "RHOD400" ] ; then
 	echo "USING EXPERIMENTAL RHOD400 LAYOUT"
 	cp /init.etc/keymaps/rhod400/*.kl /system/usr/keylayout/
 	cp /init.etc/keymaps/rhod400/*.kcm* /system/usr/keychars/
+	cp -f /system/etc/audiofiles/cdma/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
+	cp -f /system/etc/audiofiles/cdma/AudioPara3.csv /system/etc/AudioPara3.csv
+	cp -f /system/etc/audiofiles/cdma/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
 
 elif [ $LAYOUT = "RHOD500" ] ; then
 	echo "USING EXPERIMENTAL RHOD500 LAYOUT"
 	cp /init.etc/keymaps/rhod500/*.kl /system/usr/keylayout/
 	cp /init.etc/keymaps/rhod500/*.kcm* /system/usr/keychars/
+	cp -f /system/etc/audiofiles/cdma/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
+	cp -f /system/etc/audiofiles/cdma/AudioPara3.csv /system/etc/AudioPara3.csv
+	cp -f /system/etc/audiofiles/cdma/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
 else
     echo "CAN'T DETERMINE RHODIUM VARIANT TYPE"
 	cat /sys/class/htc_hw/machine_variant
 fi
+chown 1001:1005 /system/etc/AudioPara3.csv
+chmod 0444 /system/etc/AudioPara3.csv
+chmod 666 /system/etc/AudioFilterTable.csv
+chmod 666 /system/etc/AudioPreProcessTable.csv
 chmod 666 /system/usr/keylayout/*.*
 chmod 666 /system/usr/keychars/*.*
 mount -o remount,ro /system
@@ -207,15 +228,6 @@ mkdir /dev/msm_camera
 mknod /dev/msm_camera/control0 c 250 0
 mknod /dev/msm_camera/config0 c 250 1
 mknod /dev/msm_camera/frame0 c 250 2
-
-# Generate a "serial number" for the Android system to identify the device.
-# Put it in /data so it survives reboots. Won't survive a factory reset, though.
-[ -f "/data/serialno" ] || echo -e `cat /dev/urandom | tr -dc 'A-Z0-9' | fold -w 12 | head -n 1` >/data/serialno
-
-SERIALNO=$(cat /data/serialno)
-cp /proc/cmdline /tmp/cmdline
-sed -i -e "s:$: androidboot.serialno=${SERIALNO}:" /tmp/cmdline
-mount --bind /tmp/cmdline /proc/cmdline
 
 # Transition sequence for FRX06->FRX07 (eth0/tiwlan0 renamed)
 if [ -f "/data/misc/wifi/wpa_supplicant.conf" ]
