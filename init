@@ -20,8 +20,7 @@ echo 90 > /proc/sys/vm/dirty_ratio
 echo 60000 > /proc/sys/vm/dirty_expire_centisecs
 echo 60000 > /proc/sys/vm/dirty_writeback_centisecs
 
-/bin/mount | grep mtd
-notnand=$?
+notnand=0
 
 if [ $notnand = "0" ] ; then
   echo "running from NAND"
