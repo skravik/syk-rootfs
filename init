@@ -24,8 +24,8 @@ notnand=0
 
 if [ $notnand = "0" ] ; then
   echo "running from NAND"
-  /bin/mount -t yaffs2 /dev/block/mtdblock2 /system
-  /bin/mount -t yaffs2 /dev/block/mtdblock3 /data
+  /bin/mount -t yaffs2 /dev/block/mtdblock3 /system
+  /bin/mount -t yaffs2 /dev/block/mtdblock4 /data
 fi
 
 partition=mmcblk0p1
