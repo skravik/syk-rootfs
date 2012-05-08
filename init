@@ -105,35 +105,8 @@ if [ "$WIFI_TI" = "1" ] || [ "$WIFI_BCM" = "1" ];then
 fi
 
 
-if [ "$WIFI_BCM" = "1" ] ;then
-	# fyi: firmware is loaded from /data/etc/wifi/bcm432x/bcm4325-rtecdc.bin, nvram from /data/wifi-nvram.txt
-
-	# extract nvram (todo: clean this up/integrate with TI calibration)
-	if [ ! -e /data/wifi-nvram.txt ]; then
-		insmod /lib/modules/mtdchar.ko
-		mknod /dev/mtd0ro c 90 1
-		for SKIP in 5744 4736;do
-			mkdir /lib/modules/$(uname -r)
-
-			dd if=/dev/mtd0ro of=/tmp/tempcal bs=8192 count=1 skip=$SKIP
-			rmdir /lib/modules/$(uname -r)
-			dd if=/tmp/tempcal of=/data/wifi-nvram.txt bs=1 count=466
-			rm /tmp/tempcal
-		
-			if grep nocrc= /data/wifi-nvram.txt 2>&1 > /dev/null;then 
-				break
-			fi;
-		done
-		rm /dev/mtd0ro
-		rmmod mtdchar
-		if [ "$SKIP" = "5744" ];then
-			echo "CDMA Rhodium detected"
-		fi;
-		if [ "$SKIP" = "4736" ];then
-			echo "GSM Rhodium detected"
-		fi;
-
-	fi
+if [ ! -e /data/wifi-nvram.txt ]; then
+cat /proc/calibration > /data/wifi-nvram.txt
 fi
 
 if [ -f /system/etc/gingerbread.user.conf ]; then
