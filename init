@@ -74,7 +74,6 @@ if [ "$LCDDENSITY" != "" ] ; then
 	fi
 fi
 
-echo "using system/etc/$RCCONFIG.user.conf"
 
 INITRC=`ls -l /init.rc | grep "$RCSCRIPT"`
 if [ -z "$INITRC" ]; then
@@ -107,12 +106,6 @@ fi
 
 if [ ! -e /data/wifi-nvram.txt ]; then
 cat /proc/calibration > /data/wifi-nvram.txt
-fi
-
-if [ -f /system/etc/gingerbread.user.conf ]; then
-	/bin/userinit.sh -c /system/etc/gingerbread.user.conf
-else
-	echo "No user config files ($RCCONFIG) found in /system/etc"
 fi
 
 mount -tdebugfs none /dbgfs
@@ -171,6 +164,15 @@ else
     echo "CAN'T DETERMINE RHODIUM VARIANT TYPE"
 	cat /sys/class/htc_hw/machine_variant
 fi
+
+echo "using system/etc/$RCCONFIG.user.conf"
+
+if [ -f /system/etc/gingerbread.user.conf ]; then
+	/bin/userinit.sh -c /system/etc/gingerbread.user.conf
+else
+	echo "No user config files ($RCCONFIG) found in /system/etc"
+fi
+
 chown 1001:1005 /system/etc/AudioPara3.csv
 chmod 0444 /system/etc/AudioPara3.csv
 chmod 666 /system/etc/AudioFilterTable.csv
