@@ -121,8 +121,8 @@ cp /init.etc/keymaps/default/*.kcm* /system/usr/keychars/
 LAYOUT=`/bin/grep ".*0*" /sys/class/htc_hw/machine_variant`
 if [ $LAYOUT = "RHOD300" ] ; then
 	echo "USING EXPERIMENTAL TILT2 LAYOUT"
-	cp /init.etc/keymaps/rhod300/*.kl /system/usr/keylayout/
-	cp /init.etc/keymaps/rhod300/*.kcm* /system/usr/keychars/
+	cp /init.etc/keymaps/tilt2/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/tilt2/*.kcm* /system/usr/keychars/
 
 	cp -f /system/etc/audiofiles/gsm/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
 	cp -f /system/etc/audiofiles/gsm/AudioPara3_ATT.csv /system/etc/AudioPara3.csv
