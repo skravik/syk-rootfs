@@ -28,7 +28,7 @@ if [ $notnand = "0" ] ; then
   /bin/mount -t yaffs2 /dev/block/mtdblock4 /data
 fi
 
-cp -ar /init.etc/* /system/etc
+echo "n" | cp -iar /init.etc/* /system/etc >/dev/null 2>&1
 
 LCDDENSITY=`/bin/grep -o "lcd.density=.*" /proc/cmdline | /bin/sed -e "s/.*lcd.density=//g" -e "s/ .*//g"`
 
