@@ -123,16 +123,14 @@ if [ $LAYOUT = "RHOD300" ] ; then
 	echo "USING EXPERIMENTAL TILT2 LAYOUT"
 	cp /init.etc/keymaps/tilt2/*.kl /system/usr/keylayout/
 	cp /init.etc/keymaps/tilt2/*.kcm* /system/usr/keychars/
-
 	cp -f /system/etc/audiofiles/gsm/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
 	cp -f /system/etc/audiofiles/gsm/AudioPara3_ATT.csv /system/etc/AudioPara3.csv
 	cp -f /system/etc/audiofiles/gsm/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
 
-
 elif [ $LAYOUT = "RHOD100" ] ; then
 	echo "USING EXPERIMENTAL RHOD100 LAYOUT (UK DEFAULT)"
-	cp /init.etc/keymaps/rhod100/*.kl /system/usr/keylayout/
-	cp /init.etc/keymaps/rhod100/*.kcm* /system/usr/keychars/
+	cp /init.etc/keymaps/rhod100_uk/*.kl /system/usr/keylayout/
+	cp /init.etc/keymaps/rhod100_uk/*.kcm* /system/usr/keychars/
 	cp -f /system/etc/audiofiles/gsm/AudioFilterTable.csv /system/etc/AudioFilterTable.csv
 	cp -f /system/etc/audiofiles/gsm/AudioPara3.csv /system/etc/AudioPara3.csv
 	cp -f /system/etc/audiofiles/gsm/AudioPreProcessTable.csv /system/etc/AudioPreProcessTable.csv
